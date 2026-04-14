@@ -1,110 +1,12 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
-
-/* Simple layout and consumption grid styles */
-.app-root {
-  background: #f7f9fb;
+.blank-page {
+  width: 100%;
   min-height: 100vh;
+  background: #ffffff;
   padding: 2rem;
   box-sizing: border-box;
 }
 
-.app-layout {
-  display: flex;
-  align-items: flex-start;
-  gap: 2rem;
-  max-width: 1280px;
-  margin: 0 auto;
-}
-
-.consumption-grid {
-  width: 260px;
-  background: #ffffff;
-  border: 1px solid #e6e9ee;
-  border-radius: 8px;
-  padding: 1rem 1.25rem;
-  box-shadow: 0 2px 6px rgba(20, 30, 50, 0.06);
-  text-align: left;
-}
-
-.consumption-title {
-  font-size: 0.85rem;
-  color: #6b7280;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.consumption-value {
-  font-size: 1.9rem;
-  font-weight: 700;
+.page-title {
+  margin: 0;
   color: #111827;
-}
-
-.main-content {
-  flex: 1;
-  min-height: 150px;
-}
-
-.ai-bot-button {
-  position: fixed;
-  right: 1.5rem;
-  bottom: 1.5rem;
-  border: none;
-  border-radius: 999px;
-  padding: 0.75rem 1rem;
-  background: #111827;
-  color: #c11010;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 8px 20px rgba(17, 24, 39, 0.28);
-}
-
-.ai-bot-button:hover {
-  background: #1f2937;
 }
