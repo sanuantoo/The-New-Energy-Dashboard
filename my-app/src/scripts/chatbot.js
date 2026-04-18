@@ -1,15 +1,26 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Create chatbot HTML elements
     const chatbotHTML = `
-        <div class="chatbot-icon" id="chatbotIcon" aria-label="Open chat">
+        <div class="chatbot-icon" id="chatbotIcon" aria-label="Open Energy Bug chat">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                <circle cx="12" cy="12" r="10" fill="white"/>
+                <circle cx="9" cy="10" r="1.2" fill="#333"/>
+                <circle cx="15" cy="10" r="1.2" fill="#333"/>
+                <path d="M8 14.5c1 1 2.2 1.5 4 1.5s3-.5 4-1.5" fill="none" stroke="#333" stroke-width="1"/>
             </svg>
+            <span class="chatbot-icon-label">Energy Bug</span>
         </div>
 
         <div class="chatbot-window" id="chatbotWindow">
             <div class="chatbot-header">
-                <h2>Assistant</h2>
+                <div class="chatbot-header-info">
+                    <svg class="chatbot-header-avatar" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" fill="white"/>
+                        <circle cx="9" cy="10" r="1.2" fill="#667eea"/>
+                        <circle cx="15" cy="10" r="1.2" fill="#667eea"/>
+                        <path d="M8 14.5c1 1 2.2 1.5 4 1.5s3-.5 4-1.5" fill="none" stroke="#667eea" stroke-width="1"/>
+                    </svg>
+                    <h2>Energy Bug</h2>
+                </div>
                 <button class="close-btn" id="closeBtn" aria-label="Close chat">&times;</button>
             </div>
 
@@ -36,7 +47,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.body.insertAdjacentHTML('beforeend', chatbotHTML);
 
-    // Initialize chatbot functionality
     const chatbotIcon = document.getElementById('chatbotIcon');
     const chatbotWindow = document.getElementById('chatbotWindow');
     const closeBtn = document.getElementById('closeBtn');
@@ -46,6 +56,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let chatStarted = false;
 
+    const itemDetails = {
+        'Tea': 'qqqq',
+        'Coffee': 'aaaa',
+        'Chai': 'yyyyy'
+    };
+
     chatbotIcon.addEventListener('click', () => {
         chatbotWindow.classList.toggle('open');
 
@@ -53,7 +69,10 @@ document.addEventListener('DOMContentLoaded', function () {
             messageInput.focus();
 
             if (!chatStarted) {
-                addBotMessage("Hello! 👋 I'm your assistant. How can I help you today?");
+                addBotMessage("Hello! 👋 I'm Energy Bug, your assistant. How can I help you today?");
+                setTimeout(() => {
+                    addBotListMessage("Please select a drink:", ['Tea', 'Coffee', 'Chai']);
+                }, 1000);
                 chatStarted = true;
             }
         }
@@ -97,6 +116,26 @@ document.addEventListener('DOMContentLoaded', function () {
         messageDiv.classList.add('message', 'bot');
         messageDiv.innerHTML = `<div class="message-content">${escapeHtml(text)}</div>`;
         chatbotMessages.appendChild(messageDiv);
+        scrollToBottom();
+    }
+
+    function addBotListMessage(prompt, items) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', 'bot');
+        const buttonsHTML = items.map(item =>
+            `<button class="bot-list-btn" data-item="${escapeHtml(item)}">${escapeHtml(item)}</button>`
+        ).join('');
+        messageDiv.innerHTML = `<div class="message-content">${escapeHtml(prompt)}<div class="bot-list">${buttonsHTML}</div></div>`;
+        chatbotMessages.appendChild(messageDiv);
+        messageDiv.querySelectorAll('.bot-list-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const item = btn.dataset.item;
+                addUserMessage(item);
+                setTimeout(() => {
+                    addBotMessage(itemDetails[item] || "Sorry, I don't have details for that.");
+                }, 500);
+            });
+        });
         scrollToBottom();
     }
 
