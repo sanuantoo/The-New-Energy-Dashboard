@@ -55,12 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const chatbotMessages = document.getElementById('chatbotMessages');
 
     let chatStarted = false;
-
-    const itemDetails = {
-        'Tea': 'qqqq',
-        'Coffee': 'aaaa',
-        'Chai': 'yyyyy'
-    };
+    let isSending = false;
 
     chatbotIcon.addEventListener('click', () => {
         chatbotWindow.classList.toggle('open');
@@ -69,10 +64,7 @@ document.addEventListener('DOMContentLoaded', function () {
             messageInput.focus();
 
             if (!chatStarted) {
-                addBotMessage("Hello! 👋 I'm Energy Bug, your assistant. How can I help you today?");
-                setTimeout(() => {
-                    addBotListMessage("Please select a drink:", ['Tea', 'Coffee', 'Chai']);
-                }, 1000);
+                addBotMessage("Hello! I'm Energy Bug. Ask me anything about your energy system, monitoring, or alerts.");
                 chatStarted = true;
             }
         }
@@ -91,16 +83,41 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    function sendMessage() {
+    async function sendMessage() {
         const message = messageInput.value.trim();
-        if (message === '') return;
+        if (message === '' || isSending) return;
 
         addUserMessage(message);
         messageInput.value = '';
+        setInputState(true);
 
-        setTimeout(() => {
-            addBotMessage("Thanks for your message. I'll get back to you soon.");
-        }, 500);
+        const thinkingMessage = addBotMessage('Thinking...');
+
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message })
+            });
+
+            const data = await response.json();
+
+            thinkingMessage.remove();
+
+            if (!response.ok) {
+                addBotMessage(data.reply || 'The assistant is temporarily unavailable.');
+                return;
+            }
+
+            addBotMessage(data.reply || 'No response received.');
+        } catch {
+            thinkingMessage.remove();
+            addBotMessage('There was a problem reaching the assistant.');
+        } finally {
+            setInputState(false);
+        }
     }
 
     function addUserMessage(text) {
@@ -117,26 +134,14 @@ document.addEventListener('DOMContentLoaded', function () {
         messageDiv.innerHTML = `<div class="message-content">${escapeHtml(text)}</div>`;
         chatbotMessages.appendChild(messageDiv);
         scrollToBottom();
+        return messageDiv;
     }
 
-    function addBotListMessage(prompt, items) {
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message', 'bot');
-        const buttonsHTML = items.map(item =>
-            `<button class="bot-list-btn" data-item="${escapeHtml(item)}">${escapeHtml(item)}</button>`
-        ).join('');
-        messageDiv.innerHTML = `<div class="message-content">${escapeHtml(prompt)}<div class="bot-list">${buttonsHTML}</div></div>`;
-        chatbotMessages.appendChild(messageDiv);
-        messageDiv.querySelectorAll('.bot-list-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const item = btn.dataset.item;
-                addUserMessage(item);
-                setTimeout(() => {
-                    addBotMessage(itemDetails[item] || "Sorry, I don't have details for that.");
-                }, 500);
-            });
-        });
-        scrollToBottom();
+    function setInputState(disabled) {
+        isSending = disabled;
+        messageInput.disabled = disabled;
+        sendBtn.disabled = disabled;
+        messageInput.placeholder = disabled ? 'Waiting for assistant...' : 'Type your message...';
     }
 
     function scrollToBottom() {
