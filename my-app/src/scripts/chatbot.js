@@ -54,26 +54,33 @@ document.addEventListener('DOMContentLoaded', function () {
     const sendBtn = document.getElementById('sendBtn');
     const chatbotMessages = document.getElementById('chatbotMessages');
     const metricOptions = [
-        { label: 'Self Consumption', value: '60%' },
-        { label: 'Grid Impedence', value: '0.10 ohm' },
-        { label: 'Capacity Factor', value: '40%' },
-        { label: 'CO2 Reduction', value: '78%' },
+        { label: 'Self Consumption', value: '60%', description: 'The share of generated energy used directly on-site instead of being exported to the grid.' },
+        { label: 'Grid Impedence', value: '0.10 ohm', description: 'The opposition in the grid connection path; lower values usually indicate better power transfer and stability.' },
+        { label: 'Capacity Factor', value: '40%', description: 'How much energy was actually produced compared to the maximum possible output over the same period.' },
+        { label: 'CO2 Reduction', value: '78%', description: 'Estimated percentage decrease in carbon emissions due to renewable generation and efficiency improvements.' },
+        { label: 'Total demand', value: '1,250 kWh', description: 'Total electricity consumed by the site during the selected time window.' },
+        { label: 'Renewable generation', value: '780 kWh', description: 'Total electricity produced by renewable sources such as solar or wind in the selected period.' },
+        { label: 'Grid import', value: '470 kWh', description: 'Electricity taken from the grid to cover demand not met by on-site generation.' },
+        { label: 'Self sufficiency', value: '62%', description: 'The percentage of demand met by your own local generation without relying on grid imports.' },
+        { label: 'Peak demand', value: '85 kW', description: 'Highest short-interval power draw in the period, often used to calculate demand charges.' },
+        { label: 'Cost distribution', value: '55% fixed / 45% variable', description: 'How total energy cost is split between fixed fees and usage-based charges.' },
+        { label: 'Total cost', value: '$2,340', description: 'Overall energy expense for the period, including both fixed and variable charges.' },
     ];
 
     let chatStarted = false;
     let isSending = false;
+    let capacityFactorFlow = null;
 
     chatbotIcon.addEventListener('click', () => {
         chatbotWindow.classList.toggle('open');
 
         if (chatbotWindow.classList.contains('open')) {
+            resetChatSession();
             messageInput.focus();
-
-            if (!chatStarted) {
-                addBotMessage("Hello! I'm Energy Bug. Ask me anything about your energy system, monitoring, or alerts.");
-                addMetricOptions();
-                chatStarted = true;
-            }
+            addBotMessage("Hello! I'm Energy Bug. Ask me anything about your energy system, monitoring, or alerts.");
+            addMetricOptions();
+            chatbotMessages.scrollTop = 0;
+            chatStarted = true;
         }
     });
 
@@ -100,7 +107,15 @@ document.addEventListener('DOMContentLoaded', function () {
             addBotMessage('Goodbye! Closing the chat.');
             setTimeout(() => {
                 chatbotWindow.classList.remove('open');
+                resetChatSession();
             }, 1000);
+            return;
+        }
+
+        if (capacityFactorFlow && capacityFactorFlow.active) {
+            addUserMessage(message);
+            messageInput.value = '';
+            handleCapacityFactorInput(message);
             return;
         }
 
@@ -143,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const content = document.createElement('div');
         content.classList.add('message-content');
-        content.textContent = 'Choose one option:';
+        content.textContent = 'Dashboard components';
 
         const list = document.createElement('div');
         list.classList.add('bot-list');
@@ -155,7 +170,11 @@ document.addEventListener('DOMContentLoaded', function () {
             button.textContent = option.label;
             button.addEventListener('click', () => {
                 addUserMessage(option.label);
-                addBotMessage(`${option.label}: ${option.value}`);
+                addBotMessage(`${option.label}: ${option.value}. ${option.description}`);
+
+                if (option.label === 'Capacity Factor') {
+                    addCapacityFactorPrompt();
+                }
             });
             list.appendChild(button);
         });
@@ -183,11 +202,198 @@ document.addEventListener('DOMContentLoaded', function () {
         return messageDiv;
     }
 
+    function addBotRichMessage(html) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', 'bot');
+        messageDiv.innerHTML = `<div class="message-content">${html}</div>`;
+        chatbotMessages.appendChild(messageDiv);
+        scrollToBottom();
+        return messageDiv;
+    }
+
+    function addCapacityFactorPrompt() {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', 'bot');
+
+        const content = document.createElement('div');
+        content.classList.add('message-content');
+        content.textContent = 'Do you need to know how to calculate the capacity factor?';
+
+        const list = document.createElement('div');
+        list.classList.add('bot-list');
+
+        const yesButton = document.createElement('button');
+        yesButton.type = 'button';
+        yesButton.classList.add('bot-list-btn');
+        yesButton.textContent = 'Yes';
+        yesButton.addEventListener('click', () => {
+            addUserMessage('Yes');
+            addBotRichMessage('Capacity Factor = (Actual Energy Output ÷ Maximum Possible Energy Output) × 100<br><br><strong>A Simple Example</strong><br>A power plant with a capacity of 1 Megawatt (MW) runs for 1 hour.<br><br>It could have produced a maximum of: 1 MW × 1 hour = 1 MWh.<br><br>It actually produced 0.5 MWh.<br><br>Its capacity factor is: (0.5 MWh ÷ 1 MWh) × 100 = 50%.');
+            addCapacityFactorCalculationChoice();
+        });
+
+        const noButton = document.createElement('button');
+        noButton.type = 'button';
+        noButton.classList.add('bot-list-btn');
+        noButton.textContent = 'No';
+        noButton.addEventListener('click', () => {
+            addUserMessage('No');
+            addMetricOptions();
+        });
+
+        list.appendChild(yesButton);
+        list.appendChild(noButton);
+        content.appendChild(list);
+        messageDiv.appendChild(content);
+        chatbotMessages.appendChild(messageDiv);
+        scrollToBottom();
+    }
+
+    function addCapacityFactorCalculationChoice() {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', 'bot');
+
+        const content = document.createElement('div');
+        content.classList.add('message-content');
+        content.textContent = 'Do you need to perform a calculation or return to Dashboard components?';
+
+        const list = document.createElement('div');
+        list.classList.add('bot-list');
+
+        const performCalculationButton = document.createElement('button');
+        performCalculationButton.type = 'button';
+        performCalculationButton.classList.add('bot-list-btn');
+        performCalculationButton.textContent = 'Perform calculation';
+        performCalculationButton.addEventListener('click', () => {
+            addUserMessage('Perform calculation');
+            startCapacityFactorFlow();
+        });
+
+        const returnDashboardButton = document.createElement('button');
+        returnDashboardButton.type = 'button';
+        returnDashboardButton.classList.add('bot-list-btn');
+        returnDashboardButton.textContent = 'Return to Dashboard components';
+        returnDashboardButton.addEventListener('click', () => {
+            addUserMessage('Return to Dashboard components');
+            addMetricOptions();
+        });
+
+        list.appendChild(performCalculationButton);
+        list.appendChild(returnDashboardButton);
+        content.appendChild(list);
+        messageDiv.appendChild(content);
+        chatbotMessages.appendChild(messageDiv);
+        scrollToBottom();
+    }
+
+    function startCapacityFactorFlow() {
+        capacityFactorFlow = {
+            active: true,
+            step: 'ratedCapacityMw',
+            ratedCapacityMw: null,
+            durationHours: null,
+            actualEnergyMwh: null,
+        };
+
+        addBotMessage('I can calculate it for you. Enter rated capacity in MW (for example: 1.5).');
+    }
+
+    function handleCapacityFactorInput(input) {
+        if (!capacityFactorFlow || !capacityFactorFlow.active) {
+            return;
+        }
+
+        if (capacityFactorFlow.step === 'ratedCapacityMw') {
+            const ratedCapacityMw = parsePositiveNumber(input);
+            if (ratedCapacityMw === null) {
+                addBotMessage('Please enter a valid positive number for rated capacity in MW.');
+                return;
+            }
+
+            capacityFactorFlow.ratedCapacityMw = ratedCapacityMw;
+            capacityFactorFlow.step = 'durationHours';
+            addBotMessage('Great. Now enter the duration in hours (for example: 6).');
+            return;
+        }
+
+        if (capacityFactorFlow.step === 'durationHours') {
+            const durationHours = parsePositiveNumber(input);
+            if (durationHours === null) {
+                addBotMessage('Please enter a valid positive number for duration in hours.');
+                return;
+            }
+
+            capacityFactorFlow.durationHours = durationHours;
+            capacityFactorFlow.step = 'actualEnergyMwh';
+            addBotMessage('Perfect. Now enter actual energy produced in MWh (zero or more, for example: 12).');
+            return;
+        }
+
+        if (capacityFactorFlow.step === 'actualEnergyMwh') {
+            const actualEnergyMwh = parseNonNegativeNumber(input);
+            if (actualEnergyMwh === null) {
+                addBotMessage('Please enter a valid number that is zero or greater for actual energy produced in MWh.');
+                return;
+            }
+
+            capacityFactorFlow.actualEnergyMwh = actualEnergyMwh;
+
+            const maximumPossibleEnergy = capacityFactorFlow.ratedCapacityMw * capacityFactorFlow.durationHours;
+            if (maximumPossibleEnergy <= 0) {
+                addBotMessage('Unable to calculate because maximum possible energy is zero. Please restart with positive inputs.');
+                capacityFactorFlow = null;
+                return;
+            }
+
+            const capacityFactorPercent = (capacityFactorFlow.actualEnergyMwh / maximumPossibleEnergy) * 100;
+            addBotRichMessage(
+                `<strong>Your Capacity Factor Result</strong><br>` +
+                `Formula: (Actual Energy Output ÷ Maximum Possible Energy Output) × 100<br><br>` +
+                `Maximum possible energy = ${formatNumber(capacityFactorFlow.ratedCapacityMw)} MW × ${formatNumber(capacityFactorFlow.durationHours)} h = ${formatNumber(maximumPossibleEnergy)} MWh<br>` +
+                `Actual energy output = ${formatNumber(capacityFactorFlow.actualEnergyMwh)} MWh<br><br>` +
+                `Capacity factor = (${formatNumber(capacityFactorFlow.actualEnergyMwh)} ÷ ${formatNumber(maximumPossibleEnergy)}) × 100 = <strong>${formatNumber(capacityFactorPercent)}%</strong>`
+            );
+
+            addCapacityFactorCalculationChoice();
+
+            capacityFactorFlow = null;
+        }
+    }
+
+    function parsePositiveNumber(input) {
+        const parsed = Number(input.replace(',', '.'));
+        if (!Number.isFinite(parsed) || parsed <= 0) {
+            return null;
+        }
+        return parsed;
+    }
+
+    function parseNonNegativeNumber(input) {
+        const parsed = Number(input.replace(',', '.'));
+        if (!Number.isFinite(parsed) || parsed < 0) {
+            return null;
+        }
+        return parsed;
+    }
+
+    function formatNumber(value) {
+        const rounded = Math.round(value * 100) / 100;
+        return rounded.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    }
+
     function setInputState(disabled) {
         isSending = disabled;
         messageInput.disabled = disabled;
         sendBtn.disabled = disabled;
         messageInput.placeholder = disabled ? 'Waiting for assistant...' : 'Type your message...';
+    }
+
+    function resetChatSession() {
+        chatbotMessages.innerHTML = '';
+        messageInput.value = '';
+        setInputState(false);
+        chatStarted = false;
+        capacityFactorFlow = null;
     }
 
     function scrollToBottom() {
