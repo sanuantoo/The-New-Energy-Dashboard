@@ -1,6 +1,6 @@
 # Energy System Monitor
 
-This project uses a Vite React frontend plus a small Express backend for the chatbot. The browser sends requests to `/api/chat`, and the backend calls OpenAI with a server-side API key.
+This project uses a Vite React frontend plus a small Express backend for the chatbot. The browser sends requests to `/api/chat`, and the backend calls Google Gemini with a server-side API key.
 
 ## Setup
 
@@ -13,8 +13,8 @@ npm install
 2. Create a `.env` file in the project root:
 
 ```env
-OPENAI_API_KEY=your_openai_api_key_here
-OPENAI_MODEL=gpt-4.1-mini
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-1.5-flash
 CHATBOT_SYSTEM_PROMPT=You are Energy Bug, a concise and helpful assistant for energy system monitoring.
 PORT=3001
 ```
@@ -47,5 +47,5 @@ And responds with:
 
 ## Security
 
-- Keep `OPENAI_API_KEY` only in `.env` on the server.
-- Do not expose the OpenAI key in frontend code or client-side Vite env variables.
+- Keep `GEMINI_API_KEY` only in `.env` on the server.
+- Do not expose the Gemini key in frontend code or client-side Vite env variables.

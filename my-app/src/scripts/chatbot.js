@@ -53,6 +53,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const messageInput = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
     const chatbotMessages = document.getElementById('chatbotMessages');
+    const metricOptions = [
+        { label: 'Self Consumption', value: '60%' },
+        { label: 'Grid Impedence', value: '0.10 ohm' },
+        { label: 'Capacity Factor', value: '40%' },
+        { label: 'CO2 Reduction', value: '78%' },
+    ];
 
     let chatStarted = false;
     let isSending = false;
@@ -65,6 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (!chatStarted) {
                 addBotMessage("Hello! I'm Energy Bug. Ask me anything about your energy system, monitoring, or alerts.");
+                addMetricOptions();
                 chatStarted = true;
             }
         }
@@ -86,6 +93,16 @@ document.addEventListener('DOMContentLoaded', function () {
     async function sendMessage() {
         const message = messageInput.value.trim();
         if (message === '' || isSending) return;
+
+        if (message.toLowerCase() === 'exit') {
+            addUserMessage(message);
+            messageInput.value = '';
+            addBotMessage('Goodbye! Closing the chat.');
+            setTimeout(() => {
+                chatbotWindow.classList.remove('open');
+            }, 1000);
+            return;
+        }
 
         addUserMessage(message);
         messageInput.value = '';
@@ -118,6 +135,35 @@ document.addEventListener('DOMContentLoaded', function () {
         } finally {
             setInputState(false);
         }
+    }
+
+    function addMetricOptions() {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', 'bot');
+
+        const content = document.createElement('div');
+        content.classList.add('message-content');
+        content.textContent = 'Choose one option:';
+
+        const list = document.createElement('div');
+        list.classList.add('bot-list');
+
+        metricOptions.forEach((option) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.classList.add('bot-list-btn');
+            button.textContent = option.label;
+            button.addEventListener('click', () => {
+                addUserMessage(option.label);
+                addBotMessage(`${option.label}: ${option.value}`);
+            });
+            list.appendChild(button);
+        });
+
+        content.appendChild(list);
+        messageDiv.appendChild(content);
+        chatbotMessages.appendChild(messageDiv);
+        scrollToBottom();
     }
 
     function addUserMessage(text) {
