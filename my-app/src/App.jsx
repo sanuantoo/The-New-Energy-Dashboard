@@ -1,4 +1,6 @@
+import { useRef } from "react";
 import "./App.css";
+import OpenLayersMap from "./components/OpenLayersMap";
 
 const filters = [
     { label: "Default Workspace", icon: "▣" },
@@ -31,19 +33,6 @@ const gauges = [
     { label: "CO₂ Reduction", value: 0, color: "#22c55e" },
 ];
 
-const mapMarkers = [
-    { label: "1260 kVA", top: "18%", left: "55%" },
-    { label: "630 kVA", top: "58%", left: "47%" },
-    { label: "630 kVA", top: "84%", left: "48%" },
-];
-
-const routes = [
-    { top: "30%", left: "10%", width: "38%", rotate: "-12deg", color: "#f97316" },
-    { top: "49%", left: "17%", width: "53%", rotate: "9deg", color: "#0ea5e9" },
-    { top: "76%", left: "20%", width: "45%", rotate: "-8deg", color: "#22c55e" },
-    { top: "60%", left: "28%", width: "35%", rotate: "24deg", color: "#f59e0b" },
-];
-
 const technology = [
     { name: "Solar", capacity: 106, factor: 0, color: "#4f83f1" },
     { name: "Battery", capacity: 18, factor: 0, color: "#8b5cf6" },
@@ -72,6 +61,8 @@ const events = [
 ];
 
 function App() {
+    const mapRef = useRef(null);
+
     const donutStyle = {
         background: `conic-gradient(
       ${costSegments[0].color} 0% 62%,
@@ -120,46 +111,12 @@ function App() {
                     <div className="map-hint">Click on a building to view details</div>
 
                     <div className="map-controls">
-                        <button type="button">＋</button>
-                        <button type="button">－</button>
-                        <button type="button">◎</button>
+                        <button type="button" onClick={() => mapRef.current?.zoomIn()}>＋</button>
+                        <button type="button" onClick={() => mapRef.current?.zoomOut()}>－</button>
+                        <button type="button" onClick={() => mapRef.current?.resetView()}>◎</button>
                     </div>
 
-                    <div className="fake-map">
-                        <div className="map-grid" />
-                        <div className="map-road road-a" />
-                        <div className="map-road road-b" />
-                        <div className="map-road road-c" />
-
-                        {routes.map((route, index) => (
-                            <span
-                                key={index}
-                                className="route-line"
-                                style={{
-                                    top: route.top,
-                                    left: route.left,
-                                    width: route.width,
-                                    transform: `rotate(${route.rotate})`,
-                                    background: route.color,
-                                }}
-                            />
-                        ))}
-
-                        <div className="building building-lg" />
-                        <div className="building building-md" />
-                        <div className="building building-sm" />
-
-                        {mapMarkers.map((marker) => (
-                            <div
-                                key={marker.label + marker.top}
-                                className="map-marker"
-                                style={{ top: marker.top, left: marker.left }}
-                            >
-                                <div className="marker-dot">🏭</div>
-                                <span>{marker.label}</span>
-                            </div>
-                        ))}
-                    </div>
+                    <OpenLayersMap ref={mapRef} />
                 </article>
 
                 <div className="content-stack">
