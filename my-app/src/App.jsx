@@ -1,6 +1,12 @@
 import { useRef } from "react";
 import "./App.css";
-import OpenLayersMap from "./components/OpenLayersMap";
+import OpenLayersMap ffunction App() {
+    return (
+        <main className="energy-home">
+            ...
+        </main>
+    );
+}rom "./components/OpenLayersMap";
 
 const filters = [
     { label: "Default Workspace", icon: "▣" },
