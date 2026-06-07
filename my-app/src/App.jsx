@@ -8,7 +8,21 @@ const BASE_DEMAND_MWH = 45.19;
 const BASE_COST_EUR = 14292;
 const GRID_ENERGY_RATE = 210;
 const MONTHLY_CAPEX_FACTOR = 0.012;
-const FLOW_DIAGRAM_HEIGHT = 820;
+const FLOW_DIAGRAM_HEIGHT = 680;
+const FLOW_GRID_SOURCE_Y_RATIO = 92 / 820;
+const FLOW_RENEWABLE_SOURCE_START_RATIO = 230 / 820;
+const FLOW_RENEWABLE_SOURCE_STEP_RATIO = 92 / 820;
+const FLOW_HUB_CENTER_Y_RATIO = 390 / 820;
+const FLOW_HUB_TO_COMMERCIAL_Y_RATIO = 372 / 820;
+const FLOW_HUB_TO_RESIDENTIAL_Y_RATIO = 410 / 820;
+const FLOW_COMMERCIAL_TARGET_Y_RATIO = 182 / 820;
+const FLOW_RESIDENTIAL_TARGET_Y_RATIO = 612 / 820;
+const DEFAULT_RENEWABLE_SHARE = 0.15;
+const DEFAULT_RENEWABLE_OUTPUT_MWH = BASE_DEMAND_MWH * DEFAULT_RENEWABLE_SHARE;
+const CHART_WIDTH = 360;
+const CHART_HEIGHT = 180;
+const CHART_PADDING = 22;
+const LOAD_PROFILE_MAX_KW = 100;
 
 const numberFormatter = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 0,
@@ -22,193 +36,36 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
     maximumFractionDigits: 0,
 });
 
-const commonFields = [
-    { name: "name", label: "Resource name", type: "text", placeholder: "North roof PV" },
-    { name: "site", label: "Site", type: "text", placeholder: "Munich campus" },
-    { name: "capacityKw", label: "Installed capacity", type: "number", suffix: "kW" },
-    { name: "annualOutputMWh", label: "Expected output", type: "number", suffix: "MWh" },
-    { name: "investmentCost", label: "Investment cost", type: "number", suffix: "EUR" },
+const resourceTypeConfig = {
+    pv: { label: "PV", icon: "☀" },
+    wind: { label: "Wind", icon: "🌀" },
+    battery: { label: "Battery", icon: "🔋" },
+    biomass: { label: "Biomass", icon: "🌿" },
+    geothermal: { label: "Geothermal", icon: "🌋" },
+    hydropower: { label: "Hydropower", icon: "💧" },
+};
+
+const defaultResources = [
     {
-        name: "status",
-        label: "Status",
-        type: "select",
-        options: ["planned", "active", "offline"],
+        id: "pv-default",
+        type: "pv",
+        name: "PV Supply",
+        capacityKw: 52,
+        annualOutputMWh: DEFAULT_RENEWABLE_OUTPUT_MWH,
+        investmentCost: 65000,
     },
 ];
 
-const resourceTypeConfig = {
-    pv: {
-        label: "PV",
-        icon: "☀",
-        description: "Panels, tilt, orientation, and inverter sizing.",
-        defaults: {
-            name: "",
-            site: "",
-            capacityKw: "100",
-            annualOutputMWh: "18",
-            investmentCost: "65000",
-            status: "planned",
-            panelCount: "240",
-            tilt: "20",
-            azimuth: "180",
-            mountType: "roof",
-        },
-        fields: [
-            { name: "panelCount", label: "Panel count", type: "number" },
-            { name: "tilt", label: "Tilt angle", type: "number", suffix: "deg" },
-            { name: "azimuth", label: "Orientation", type: "number", suffix: "deg" },
-            {
-                name: "mountType",
-                label: "Mount type",
-                type: "select",
-                options: ["roof", "ground"],
-            },
-        ],
-    },
-    wind: {
-        label: "Wind",
-        icon: "🌀",
-        description: "Turbines, wind regime, and expected capacity factor.",
-        defaults: {
-            name: "",
-            site: "",
-            capacityKw: "250",
-            annualOutputMWh: "32",
-            investmentCost: "110000",
-            status: "planned",
-            turbineCount: "2",
-            hubHeight: "80",
-            averageWindSpeed: "6.5",
-            capacityFactor: "28",
-        },
-        fields: [
-            { name: "turbineCount", label: "Turbine count", type: "number" },
-            { name: "hubHeight", label: "Hub height", type: "number", suffix: "m" },
-            { name: "averageWindSpeed", label: "Average wind speed", type: "number", suffix: "m/s" },
-            { name: "capacityFactor", label: "Capacity factor", type: "number", suffix: "%" },
-        ],
-    },
-    battery: {
-        label: "Battery",
-        icon: "🔋",
-        description: "Storage capacity, reserve policy, and dispatch support.",
-        defaults: {
-            name: "",
-            site: "",
-            capacityKw: "80",
-            annualOutputMWh: "12",
-            investmentCost: "42000",
-            status: "planned",
-            storageKWh: "160",
-            chargeRateKw: "60",
-            reservePercent: "20",
-            roundTripEfficiency: "92",
-        },
-        fields: [
-            { name: "storageKWh", label: "Storage capacity", type: "number", suffix: "kWh" },
-            { name: "chargeRateKw", label: "Charge rate", type: "number", suffix: "kW" },
-            { name: "reservePercent", label: "Reserve target", type: "number", suffix: "%" },
-            { name: "roundTripEfficiency", label: "Round-trip efficiency", type: "number", suffix: "%" },
-        ],
-    },
-    biomass: {
-        label: "Biomass",
-        icon: "🌿",
-        description: "Feedstock, conversion efficiency, and run hours.",
-        defaults: {
-            name: "",
-            site: "",
-            capacityKw: "120",
-            annualOutputMWh: "24",
-            investmentCost: "90000",
-            status: "planned",
-            feedstock: "wood chips",
-            availability: "85",
-            conversionEfficiency: "38",
-            operatingHours: "4200",
-        },
-        fields: [
-            { name: "feedstock", label: "Feedstock", type: "text", placeholder: "wood chips" },
-            { name: "availability", label: "Fuel availability", type: "number", suffix: "%" },
-            { name: "conversionEfficiency", label: "Conversion efficiency", type: "number", suffix: "%" },
-            { name: "operatingHours", label: "Operating hours", type: "number", suffix: "h/yr" },
-        ],
-    },
-    geothermal: {
-        label: "Geothermal",
-        icon: "🌋",
-        description: "Well depth, source temperature, and thermal conversion.",
-        defaults: {
-            name: "",
-            site: "",
-            capacityKw: "140",
-            annualOutputMWh: "26",
-            investmentCost: "125000",
-            status: "planned",
-            wellDepth: "1800",
-            reservoirTemperature: "92",
-            reinjectionRate: "85",
-            plantType: "binary",
-        },
-        fields: [
-            { name: "wellDepth", label: "Well depth", type: "number", suffix: "m" },
-            { name: "reservoirTemperature", label: "Source temperature", type: "number", suffix: "C" },
-            { name: "reinjectionRate", label: "Reinjection rate", type: "number", suffix: "%" },
-            {
-                name: "plantType",
-                label: "Plant type",
-                type: "select",
-                options: ["binary", "flash"],
-            },
-        ],
-    },
-    hydropower: {
-        label: "Hydropower",
-        icon: "💧",
-        description: "Head, flow rate, and turbine conversion for water supply.",
-        defaults: {
-            name: "",
-            site: "",
-            capacityKw: "160",
-            annualOutputMWh: "30",
-            investmentCost: "135000",
-            status: "planned",
-            waterHead: "34",
-            flowRate: "1.8",
-            turbineType: "francis",
-            seasonalAvailability: "78",
-        },
-        fields: [
-            { name: "waterHead", label: "Water head", type: "number", suffix: "m" },
-            { name: "flowRate", label: "Flow rate", type: "number", suffix: "m3/s" },
-            {
-                name: "turbineType",
-                label: "Turbine type",
-                type: "select",
-                options: ["francis", "kaplan", "pelton"],
-            },
-            { name: "seasonalAvailability", label: "Seasonal availability", type: "number", suffix: "%" },
-        ],
-    },
-};
-
-const initialType = "pv";
-const plannerEligibleTypes = ["pv", "wind", "biomass", "geothermal", "hydropower"];
-
-function createFormState(type) {
-    return {
-        type,
-        ...resourceTypeConfig[type].defaults,
-    };
-}
-
-function toNumber(value) {
-    const parsedValue = Number.parseFloat(value);
-    return Number.isFinite(parsedValue) ? parsedValue : 0;
-}
-
 function formatEnergy(value) {
     return `${numberFormatter.format(Math.max(value, 0))} MWh`;
+}
+
+function formatEnergyKwh(value) {
+    return `${numberFormatter.format(Math.max(value, 0) * 1000)} kWh`;
+}
+
+function formatPowerKw(value) {
+    return `${numberFormatter.format(Math.max(value, 0) * 1000)} kW`;
 }
 
 function formatCurrency(value) {
@@ -219,137 +76,79 @@ function formatPercent(value) {
     return `${numberFormatter.format(Math.max(value, 0))}%`;
 }
 
-function titleCase(value) {
-    return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
-function formatPlannerNumber(value, maximumFractionDigits = 0) {
-    return new Intl.NumberFormat("en-US", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits,
-    }).format(Math.max(value, 0));
-}
-
-function buildSelfSufficiencyPlan(type, targetOutputMWh) {
-    const config = resourceTypeConfig[type];
-    const defaults = config.defaults;
-    const baseOutput = Math.max(toNumber(defaults.annualOutputMWh), 0.1);
-    const scale = targetOutputMWh > 0 ? targetOutputMWh / baseOutput : 0;
-    const capacityKw = toNumber(defaults.capacityKw) * scale;
-    const investmentCost = toNumber(defaults.investmentCost) * scale;
-
-    const plan = {
-        type,
-        label: config.label,
-        icon: config.icon,
-        scale,
-        formValues: {
-            capacityKw: capacityKw.toFixed(0),
-            annualOutputMWh: targetOutputMWh.toFixed(2),
-            investmentCost: investmentCost.toFixed(0),
-        },
-        details: [
-            { label: "Installed capacity", value: `${formatPlannerNumber(capacityKw)} kW` },
-            { label: "Expected output", value: `${formatPlannerNumber(targetOutputMWh, 2)} MWh` },
-            { label: "Investment cost", value: currencyFormatter.format(investmentCost) },
-        ],
-        notes: [],
-    };
-
-    switch (type) {
-        case "pv": {
-            const panelCount = Math.max(Math.round(toNumber(defaults.panelCount) * scale), 1);
-            plan.formValues.panelCount = String(panelCount);
-            plan.formValues.tilt = defaults.tilt;
-            plan.formValues.azimuth = defaults.azimuth;
-            plan.formValues.mountType = defaults.mountType;
-            plan.details.push(
-                { label: "Panel count", value: `${formatPlannerNumber(panelCount)} panels` },
-                { label: "Tilt angle", value: `${defaults.tilt} deg` },
-                { label: "Orientation", value: `${defaults.azimuth} deg` },
-                { label: "Mount type", value: titleCase(defaults.mountType) },
-            );
-            plan.notes.push("PV planning scales panel count and inverter-side capacity from the target output.");
-            break;
-        }
-        case "wind": {
-            const turbineCount = Math.max(Math.round(toNumber(defaults.turbineCount) * scale), 1);
-            plan.formValues.turbineCount = String(turbineCount);
-            plan.formValues.hubHeight = defaults.hubHeight;
-            plan.formValues.averageWindSpeed = defaults.averageWindSpeed;
-            plan.formValues.capacityFactor = defaults.capacityFactor;
-            plan.details.push(
-                { label: "Turbine count", value: `${formatPlannerNumber(turbineCount)} turbines` },
-                { label: "Hub height", value: `${defaults.hubHeight} m` },
-                { label: "Average wind speed", value: `${defaults.averageWindSpeed} m/s` },
-                { label: "Capacity factor", value: `${defaults.capacityFactor}%` },
-            );
-            plan.notes.push("Wind planning keeps the site wind regime fixed and scales the fleet size to the self-sufficiency target.");
-            break;
-        }
-        case "biomass": {
-            plan.formValues.feedstock = defaults.feedstock;
-            plan.formValues.availability = defaults.availability;
-            plan.formValues.conversionEfficiency = defaults.conversionEfficiency;
-            plan.formValues.operatingHours = defaults.operatingHours;
-            plan.details.push(
-                { label: "Feedstock", value: titleCase(defaults.feedstock) },
-                { label: "Fuel availability", value: `${defaults.availability}%` },
-                { label: "Conversion efficiency", value: `${defaults.conversionEfficiency}%` },
-                { label: "Operating hours", value: `${formatPlannerNumber(toNumber(defaults.operatingHours) * scale)} h/yr` },
-            );
-            plan.notes.push("Biomass planning assumes the same conversion efficiency and scales annual runtime for the target energy output.");
-            break;
-        }
-        case "geothermal": {
-            plan.formValues.wellDepth = defaults.wellDepth;
-            plan.formValues.reservoirTemperature = defaults.reservoirTemperature;
-            plan.formValues.reinjectionRate = defaults.reinjectionRate;
-            plan.formValues.plantType = defaults.plantType;
-            plan.details.push(
-                { label: "Well depth", value: `${defaults.wellDepth} m` },
-                { label: "Source temperature", value: `${defaults.reservoirTemperature} C` },
-                { label: "Reinjection rate", value: `${defaults.reinjectionRate}%` },
-                { label: "Plant type", value: titleCase(defaults.plantType) },
-            );
-            plan.notes.push("Geothermal planning keeps the reservoir assumptions fixed and scales plant capacity against the required annual yield.");
-            break;
-        }
-        case "hydropower": {
-            const scaledFlowRate = toNumber(defaults.flowRate) * scale;
-            plan.formValues.waterHead = defaults.waterHead;
-            plan.formValues.flowRate = scaledFlowRate.toFixed(2);
-            plan.formValues.turbineType = defaults.turbineType;
-            plan.formValues.seasonalAvailability = defaults.seasonalAvailability;
-            plan.details.push(
-                { label: "Water head", value: `${defaults.waterHead} m` },
-                { label: "Flow rate", value: `${formatPlannerNumber(scaledFlowRate, 2)} m3/s` },
-                { label: "Turbine type", value: titleCase(defaults.turbineType) },
-                { label: "Seasonal availability", value: `${defaults.seasonalAvailability}%` },
-            );
-            plan.notes.push("Hydropower planning uses the same head and turbine type while scaling flow throughput to hit the target output.");
-            break;
-        }
-        default:
-            break;
+function getChartPoints(values, width, height, padding, maxValue) {
+    if (values.length === 0) {
+        return [];
     }
 
-    return plan;
+    const safeMax = maxValue > 0 ? maxValue : Number.EPSILON;
+    const step = values.length > 1 ? (width - (padding * 2)) / (values.length - 1) : 0;
+
+    return values.map((value, index) => {
+        const x = padding + (step * index);
+        const y = height - padding - ((value / safeMax) * (height - (padding * 2)));
+        return { x, y };
+    });
+}
+
+function buildLinePath(values, width, height, padding, maxValue) {
+    const points = getChartPoints(values, width, height, padding, maxValue);
+
+    if (points.length === 0) {
+        return "";
+    }
+
+    return points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+}
+
+function buildAreaPath(values, width, height, padding, maxValue) {
+    const points = getChartPoints(values, width, height, padding, maxValue);
+
+    if (points.length === 0) {
+        return "";
+    }
+
+    const baselineY = height - padding;
+    const firstPoint = points[0];
+    const lastPoint = points[points.length - 1];
+    const lineSection = points.map((point) => `L ${point.x} ${point.y}`).join(" ");
+
+    return `M ${firstPoint.x} ${baselineY} ${lineSection} L ${lastPoint.x} ${baselineY} Z`;
+}
+
+function getCenteredChartPoints(values, width, height, padding, maxAbsValue) {
+    if (values.length === 0) {
+        return [];
+    }
+
+    const safeMax = Math.max(maxAbsValue, 1);
+    const step = values.length > 1 ? (width - (padding * 2)) / (values.length - 1) : 0;
+    const centerY = height / 2;
+    const usableHalfHeight = (height - (padding * 2)) / 2;
+
+    return values.map((value, index) => ({
+        x: padding + (step * index),
+        y: centerY - ((value / safeMax) * usableHalfHeight),
+    }));
+}
+
+function buildCenteredLinePath(values, width, height, padding, maxAbsValue) {
+    const points = getCenteredChartPoints(values, width, height, padding, maxAbsValue);
+
+    if (points.length === 0) {
+        return "";
+    }
+
+    return points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
 }
 
 function App() {
     const mapRef = useRef(null);
     const diagramExportRef = useRef(null);
-    const [selectedType, setSelectedType] = useState(initialType);
-    const [formState, setFormState] = useState(createFormState(initialType));
-    const [resources, setResources] = useState([]);
     const [showMap, setShowMap] = useState(false);
     const [exportingFormat, setExportingFormat] = useState("");
-    const [selfSufficiencyTarget, setSelfSufficiencyTarget] = useState(40);
-    const [implementationBudget, setImplementationBudget] = useState("160000");
-    const [plannerSource, setPlannerSource] = useState("pv");
 
-    const selectedConfig = resourceTypeConfig[selectedType];
+    const resources = defaultResources;
     const renewableGeneration = resources.reduce((total, resource) => total + resource.annualOutputMWh, 0);
     const gridImport = Math.max(BASE_DEMAND_MWH - renewableGeneration, 0);
     const amortizedCapex = resources.reduce(
@@ -367,7 +166,7 @@ function App() {
     const kpis = [
         { icon: "⚡", title: "Total Demand", value: formatEnergy(BASE_DEMAND_MWH), note: "Demand baseline for 30 days" },
         { icon: "⇄", title: "Grid Import", value: formatEnergy(gridImport), note: `${numberFormatter.format(100 - renewableShare)}% of demand supplied by grid` },
-        { icon: "☼", title: "Renewable Generation", value: formatEnergy(renewableGeneration), note: `${resources.length} configured renewable assets` },
+        { icon: "☼", title: "Renewable Generation", value: formatEnergy(renewableGeneration), note: `${numberFormatter.format(renewableShare)}% of total demand supplied by renewables` },
         { icon: "€", title: "Total Cost", value: formatCurrency(totalCost), note: "Operating cost plus monthly capex" },
     ];
 
@@ -382,9 +181,7 @@ function App() {
     const typeBreakdown = Object.keys(resourceTypeConfig)
         .map((type) => {
             const matchingResources = resources.filter((resource) => resource.type === type);
-            const totalOutput = resources
-                .filter((resource) => resource.type === type)
-                .reduce((total, resource) => total + resource.annualOutputMWh, 0);
+            const totalOutput = matchingResources.reduce((total, resource) => total + resource.annualOutputMWh, 0);
 
             if (matchingResources.length === 0) {
                 return null;
@@ -421,11 +218,7 @@ function App() {
     const inverterThroughput = pvGeneration + windGeneration + hydropowerGeneration;
     const gridInterfaceLoad = gridImport;
     const thermalLoopOutput = geothermalGeneration + biomassGeneration;
-    const selfSufficiencyOutputTarget = (BASE_DEMAND_MWH * selfSufficiencyTarget) / 100;
-    const selectedPlannerConfig = resourceTypeConfig[plannerSource];
-    const selfSufficiencyPlan = buildSelfSufficiencyPlan(plannerSource, selfSufficiencyOutputTarget);
-    const implementationBudgetValue = toNumber(implementationBudget);
-    const budgetDelta = implementationBudgetValue - toNumber(selfSufficiencyPlan.formValues.investmentCost);
+    const averageDailyDemand = BASE_DEMAND_MWH / 30;
 
     const renewableSourceTones = {
         pv: "solar",
@@ -436,10 +229,123 @@ function App() {
         hydropower: "hydropower",
     };
 
+    const dailyDemandWeights = [0.93, 0.99, 1.04, 0.97, 1.08, 1.05, 0.94];
+    const dailyRenewableWeights = [0.86, 0.98, 1.12, 0.95, 1.08, 1.14, 0.87];
+    const monthlyLabels = Array.from({ length: 30 }, (_, index) => `D${index + 1}`);
+    const monthlyDemandWeights = monthlyLabels.map((_, index) => dailyDemandWeights[index % dailyDemandWeights.length]);
+    const monthlyRenewableWeights = monthlyLabels.map((_, index) => dailyRenewableWeights[index % dailyRenewableWeights.length]);
+    const totalMonthlyDemandWeight = monthlyDemandWeights.reduce((total, value) => total + value, 0);
+    const totalMonthlyRenewableWeight = monthlyRenewableWeights.reduce((total, value) => total + value, 0);
+
+    const renewableSourceShares = {
+        pv: renewableGeneration > 0 ? pvGeneration / renewableGeneration : 0,
+        wind: renewableGeneration > 0 ? windGeneration / renewableGeneration : 0,
+        battery: renewableGeneration > 0 ? batteryGeneration / renewableGeneration : 0,
+        biomass: renewableGeneration > 0 ? biomassGeneration / renewableGeneration : 0,
+        geothermal: renewableGeneration > 0 ? geothermalGeneration / renewableGeneration : 0,
+        hydropower: renewableGeneration > 0 ? hydropowerGeneration / renewableGeneration : 0,
+    };
+
+    const monthlyEnergyBalance = monthlyLabels.map((label, index) => {
+        const demand = BASE_DEMAND_MWH * (monthlyDemandWeights[index] / totalMonthlyDemandWeight);
+        const renewable = Math.min(demand, renewableGeneration * (monthlyRenewableWeights[index] / totalMonthlyRenewableWeight));
+        const grid = Math.max(demand - renewable, 0);
+
+        return {
+            label,
+            demand,
+            renewable,
+            grid,
+            pv: renewable * renewableSourceShares.pv,
+            wind: renewable * renewableSourceShares.wind,
+            battery: renewable * renewableSourceShares.battery,
+            biomass: renewable * renewableSourceShares.biomass,
+            geothermal: renewable * renewableSourceShares.geothermal,
+            hydropower: renewable * renewableSourceShares.hydropower,
+        };
+    });
+
+    const monthlySupplyDemand = monthlyEnergyBalance.map(({ label, demand, renewable, grid }) => ({
+        label,
+        demand,
+        renewable,
+        grid,
+    }));
+
+    const hourlyLabels = ["00", "04", "08", "12", "16", "20"];
+    const hourlyLoadKw = [45, 43, 41, 39, 39.5, 45, 54, 63, 73, 78, 81, 84, 83, 80, 76, 76.5, 81, 87, 88, 83, 74, 66, 60, 52];
+    const dailyLoadProfile = hourlyLoadKw.map((loadKw, index) => ({
+        hour: index,
+        load: loadKw / 1000,
+    }));
+
+    const technologyCapacity = Object.keys(resourceTypeConfig).map((type) => ({
+        key: type,
+        label: resourceTypeConfig[type].label,
+        tone: renewableSourceTones[type] || "solar",
+        value: resources
+            .filter((resource) => resource.type === type)
+            .reduce((total, resource) => total + (resource.capacityKw || 0), 0),
+    }));
+    const costContribution = [
+        { key: "base", label: "Base operations", value: BASE_COST_EUR, tone: "base" },
+        { key: "capex", label: "Renewable capex", value: amortizedCapex, tone: "capex" },
+        { key: "savings", label: "Grid cost avoided", value: avoidedGridCost, tone: "savings" },
+    ];
+
+    const monthlyBalanceChart = monthlyEnergyBalance.map((item, index) => ({
+        ...item,
+        displayLabel: `12/${String(index + 1).padStart(2, "0")}`,
+        consumption: item.demand,
+        gridImport: item.grid,
+        netBalanceRatio: item.demand > 0 ? item.renewable / item.demand : 0,
+    }));
+    const activeBalanceLegend = [
+        { key: "grid", label: "Grid Import", tone: "grid" },
+        { key: "consumption", label: "Consumption", tone: "consumption" },
+        { key: "net-balance", label: "Net Balance", tone: "net-balance" },
+    ];
+    const loadProfileSeries = dailyLoadProfile.map((item) => item.load);
+    const monthlySupplyDemandMax = Math.max(...monthlySupplyDemand.map((item) => item.demand), 1);
+    const loadProfileMax = LOAD_PROFILE_MAX_KW / 1000;
+    const balanceMax = Math.max(...monthlyBalanceChart.map((item) => item.demand), 1);
+    const balanceAxisMax = Math.max(balanceMax, 1);
+    const balanceAxisTicks = [balanceAxisMax, balanceAxisMax / 2, 0, -balanceAxisMax / 2, -balanceAxisMax];
+    const balanceLineSeries = monthlyBalanceChart.map((item) => item.netBalanceRatio);
+    const balanceLinePath = buildLinePath(balanceLineSeries, 100, 100, 2, 1);
+    const balanceLinePoints = getChartPoints(balanceLineSeries, 100, 100, 2, 1);
+    const capacityMax = Math.max(...technologyCapacity.map((item) => item.value), 1);
+    const costContributionMax = Math.max(...costContribution.map((item) => item.value), 1);
+    const loadProfilePath = buildLinePath(loadProfileSeries, CHART_WIDTH, CHART_HEIGHT, CHART_PADDING, loadProfileMax);
+    const loadProfileAreaPath = buildAreaPath(loadProfileSeries, CHART_WIDTH, CHART_HEIGHT, CHART_PADDING, loadProfileMax);
+    const loadProfilePoints = getChartPoints(loadProfileSeries, CHART_WIDTH, CHART_HEIGHT, CHART_PADDING, loadProfileMax);
+    const averageLoad = loadProfileSeries.reduce((total, value) => total + value, 0) / loadProfileSeries.length;
+    const averageLoadY = CHART_HEIGHT - CHART_PADDING - ((averageLoad / loadProfileMax) * (CHART_HEIGHT - (CHART_PADDING * 2)));
+    const loadYAxisTicks = [0, 20, 40, 60, 80, 100].map((tickKw) => tickKw / 1000);
+    const morningPeakWindow = { start: 10, end: 13, label: "Morning Peak" };
+    const eveningPeakWindow = { start: 16, end: 20, label: "Evening Peak" };
+    const xStep = (CHART_WIDTH - (CHART_PADDING * 2)) / Math.max(loadProfileSeries.length - 1, 1);
+    const peakWindows = [morningPeakWindow, eveningPeakWindow].map((window) => ({
+        ...window,
+        x: CHART_PADDING + (window.start * xStep),
+        width: Math.max((window.end - window.start) * xStep, xStep * 1.6),
+    }));
+    const peakPointIndexes = new Set([
+        ...Array.from({ length: morningPeakWindow.end - morningPeakWindow.start + 1 }, (_, index) => morningPeakWindow.start + index),
+        ...Array.from({ length: eveningPeakWindow.end - eveningPeakWindow.start + 1 }, (_, index) => eveningPeakWindow.start + index),
+    ]);
+
+    const flowGridSourceY = FLOW_DIAGRAM_HEIGHT * FLOW_GRID_SOURCE_Y_RATIO;
+    const flowRenewableSourceStartY = FLOW_DIAGRAM_HEIGHT * FLOW_RENEWABLE_SOURCE_START_RATIO;
+    const flowRenewableSourceStepY = FLOW_DIAGRAM_HEIGHT * FLOW_RENEWABLE_SOURCE_STEP_RATIO;
+    const flowHubCenterY = FLOW_DIAGRAM_HEIGHT * FLOW_HUB_CENTER_Y_RATIO;
+    const flowHubToCommercialY = FLOW_DIAGRAM_HEIGHT * FLOW_HUB_TO_COMMERCIAL_Y_RATIO;
+    const flowHubToResidentialY = FLOW_DIAGRAM_HEIGHT * FLOW_HUB_TO_RESIDENTIAL_Y_RATIO;
+    const flowCommercialTargetY = FLOW_DIAGRAM_HEIGHT * FLOW_COMMERCIAL_TARGET_Y_RATIO;
+    const flowResidentialTargetY = FLOW_DIAGRAM_HEIGHT * FLOW_RESIDENTIAL_TARGET_Y_RATIO;
+
     const renewableSourceNodes = typeBreakdown.map((item, index) => {
         const share = BASE_DEMAND_MWH > 0 ? (item.output / BASE_DEMAND_MWH) * 100 : 0;
-        const sourceNodeStart = 170;
-        const sourceNodeStep = 92;
 
         return {
             key: item.type,
@@ -450,7 +356,7 @@ function App() {
             note: `${numberFormatter.format(share)}% of demand`,
             tone: renewableSourceTones[item.type] || "solar",
             tooltip: item.resources.map((resource) => `${resource.name} • ${formatEnergy(resource.annualOutputMWh)}`),
-            y: sourceNodeStart + (index * sourceNodeStep),
+            y: flowRenewableSourceStartY + (index * flowRenewableSourceStepY),
         };
     });
 
@@ -468,7 +374,7 @@ function App() {
                 `Demand share • ${formatPercent(100 - renewableShare)}`,
                 "Imported from the external electricity network.",
             ],
-            y: 92,
+            y: flowGridSourceY,
         },
         ...renewableSourceNodes,
     ];
@@ -478,10 +384,6 @@ function App() {
         className: `${node.tone}-to-hub`,
         amount: node.value,
         percent: node.percent,
-        x1: 180,
-        y1: node.y,
-        x2: 430,
-        y2: 390,
         badgeLeft: 28,
         badgeTop: `${((node.y / FLOW_DIAGRAM_HEIGHT) * 100) - 2}%`,
     }));
@@ -531,7 +433,7 @@ function App() {
         },
         {
             key: "thermal",
-            label: "Thermal Loop",
+            label: "Geothermal / Biomass",
             value: formatEnergy(thermalLoopOutput),
             note: geothermalResources.length + biomassResources.length > 0
                 ? `${geothermalResources.length + biomassResources.length} thermal renewable assets`
@@ -543,7 +445,7 @@ function App() {
         },
         {
             key: "water",
-            label: "Water Intake",
+            label: "Hydropower",
             value: formatEnergy(hydropowerGeneration),
             note: hydropowerResources.length > 0 ? `${hydropowerResources.length} hydropower assets` : "No hydropower assets configured",
             tooltip: hydropowerResources.length > 0
@@ -640,94 +542,6 @@ function App() {
         }
     }
 
-    function handleLoadPlanIntoForm() {
-        setSelectedType(plannerSource);
-        setFormState((currentState) => ({
-            ...createFormState(plannerSource),
-            ...currentState,
-            ...selfSufficiencyPlan.formValues,
-            type: plannerSource,
-        }));
-    }
-
-    function handleTypeChange(type) {
-        setSelectedType(type);
-        setFormState(createFormState(type));
-    }
-
-    function handleFieldChange(event) {
-        const { name, value } = event.target;
-        setFormState((currentState) => ({
-            ...currentState,
-            [name]: value,
-        }));
-    }
-
-    function handleSubmit(event) {
-        event.preventDefault();
-
-        const nextResource = {
-            id: `${selectedType}-${Date.now()}`,
-            type: selectedType,
-            name: formState.name.trim() || `${selectedConfig.label} ${resources.length + 1}`,
-            site: formState.site.trim() || "Unassigned site",
-            status: formState.status,
-            capacityKw: toNumber(formState.capacityKw),
-            annualOutputMWh: toNumber(formState.annualOutputMWh),
-            investmentCost: toNumber(formState.investmentCost),
-            customFields: selectedConfig.fields.map((field) => ({
-                label: field.label,
-                value: formState[field.name] || "-",
-                suffix: field.suffix || "",
-            })),
-        };
-
-        setResources((currentResources) => [nextResource, ...currentResources]);
-        setFormState(createFormState(selectedType));
-    }
-
-    function handleReset() {
-        setFormState(createFormState(selectedType));
-    }
-
-    function handleRemove(resourceId) {
-        setResources((currentResources) => currentResources.filter((resource) => resource.id !== resourceId));
-    }
-
-    function renderField(field) {
-        if (field.type === "select") {
-            return (
-                <label className="form-field" key={field.name}>
-                    <span>{field.label}</span>
-                    <select name={field.name} value={formState[field.name]} onChange={handleFieldChange}>
-                        {field.options.map((option) => (
-                            <option key={option} value={option}>
-                                {titleCase(option)}
-                            </option>
-                        ))}
-                    </select>
-                </label>
-            );
-        }
-
-        return (
-            <label className="form-field" key={field.name}>
-                <span>{field.label}</span>
-                <div className="input-shell">
-                    <input
-                        name={field.name}
-                        type={field.type}
-                        value={formState[field.name]}
-                        onChange={handleFieldChange}
-                        placeholder={field.placeholder || ""}
-                        min={field.type === "number" ? "0" : undefined}
-                    />
-                    {field.suffix ? <small>{field.suffix}</small> : null}
-                </div>
-            </label>
-        );
-    }
-
     return (
         <main className="energy-home">
             <header className="dashboard-header brand-header">
@@ -750,247 +564,136 @@ function App() {
                 ))}
             </section>
 
-            <section className="panel planner-panel">
-                <div className="panel-head planner-head">
-                    <div>
-                        <h3>Self-Sufficiency Planner</h3>
-                        <p>Choose a target self-sufficiency level, set an implementation budget, and see the exact renewable setup needed to reach it.</p>
-                    </div>
-                    <div className="planner-target-pill">{formatPercent(selfSufficiencyTarget)} target</div>
-                </div>
-
-                <div className="planner-grid">
-                    <div className="planner-controls-card">
-                        <label className="planner-field">
-                            <span>Self sufficiency</span>
-                            <strong>{formatPercent(selfSufficiencyTarget)}</strong>
-                            <input
-                                max="100"
-                                min="0"
-                                step="1"
-                                type="range"
-                                value={selfSufficiencyTarget}
-                                onChange={(event) => setSelfSufficiencyTarget(toNumber(event.target.value))}
-                            />
-                            <small>Target renewable contribution for the 30-day demand baseline.</small>
-                        </label>
-
-                        <label className="planner-field">
-                            <span>Initial cost of implementation</span>
-                            <div className="planner-budget-input">
-                                <small>EUR</small>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="1000"
-                                    value={implementationBudget}
-                                    onChange={(event) => setImplementationBudget(event.target.value)}
-                                />
-                            </div>
-                            <small>Budget available to implement the recommended renewable route.</small>
-                        </label>
-                    </div>
-
-                    <div className="planner-route-card">
-                        <div className="planner-route-head">
-                            <span className="flow-label">Possible self-sufficiency routes</span>
-                            <strong>{formatEnergy(selfSufficiencyOutputTarget)} renewable output required</strong>
-                        </div>
-                        <div className="planner-route-grid">
-                            {plannerEligibleTypes.map((type) => {
-                                const config = resourceTypeConfig[type];
-                                const plan = buildSelfSufficiencyPlan(type, selfSufficiencyOutputTarget);
-
-                                return (
-                                    <button
-                                        type="button"
-                                        className={`planner-route-option ${plannerSource === type ? "active" : ""}`}
-                                        key={type}
-                                        onClick={() => setPlannerSource(type)}
-                                    >
-                                        <span className="planner-route-icon">{config.icon}</span>
-                                        <strong>{config.label}</strong>
-                                        <small>{plan.details[2]?.value || currencyFormatter.format(0)}</small>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    <div className="planner-recommendation-card">
-                        <div className="planner-recommendation-head">
-                            <div>
-                                <span className="flow-label">Recommended setup</span>
-                                <h4>{selectedPlannerConfig.icon} {selectedPlannerConfig.label} route to {formatPercent(selfSufficiencyTarget)} self sufficiency</h4>
-                            </div>
-                            <button className="secondary-btn" type="button" onClick={handleLoadPlanIntoForm}>
-                                Load into customization
-                            </button>
-                        </div>
-
-                        <div className="planner-insight-grid">
-                            {selfSufficiencyPlan.details.map((detail) => (
-                                <div className="planner-insight" key={detail.label}>
-                                    <span>{detail.label}</span>
-                                    <strong>{detail.value}</strong>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className={`planner-budget-status ${budgetDelta >= 0 ? "within" : "gap"}`}>
-                            <span>{budgetDelta >= 0 ? "Budget status" : "Budget gap"}</span>
-                            <strong>
-                                {budgetDelta >= 0
-                                    ? `${currencyFormatter.format(budgetDelta)} available after implementation`
-                                    : `${currencyFormatter.format(Math.abs(budgetDelta))} additional budget required`}
-                            </strong>
-                        </div>
-
-                        <div className="planner-note-list">
-                            {selfSufficiencyPlan.notes.map((note) => (
-                                <p key={note}>{note}</p>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             <section className="main-layout">
                 <div className="control-board">
-                    <article className="panel pipeline-panel">
-                        <div className="panel-head energy-flow-head">
-                            <div>
-                                <h3>Energy Flow Diagram</h3>
-                                <p>Flow with amounts and percentages across sources, the energy system, and connected loads.</p>
-                            </div>
-                            <div className="flow-head-actions">
-                                <span className="flow-period">30 days</span>
-                                <button
-                                    className="secondary-btn"
-                                    type="button"
-                                    disabled={exportingFormat !== ""}
-                                    onClick={() => handleExport("png")}
-                                >
-                                    {exportingFormat === "png" ? "Exporting PNG..." : "Export PNG"}
-                                </button>
-                                <button
-                                    className="secondary-btn"
-                                    type="button"
-                                    disabled={exportingFormat !== ""}
-                                    onClick={() => handleExport("pdf")}
-                                >
-                                    {exportingFormat === "pdf" ? "Exporting PDF..." : "Export PDF"}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="diagram-export-surface" ref={diagramExportRef}>
-                            <div className="node-link-board" aria-label="energy flow diagram">
-                            <svg className="flow-network-lines" viewBox={`0 0 1000 ${FLOW_DIAGRAM_HEIGHT}`} preserveAspectRatio="none" aria-hidden="true">
-                                {sourceNodes.map((node) => (
-                                    <line
-                                        className={`flow-line-svg ${node.tone}`}
-                                        key={`${node.key}-line`}
-                                        x1="180"
-                                        y1={node.y}
-                                        x2="430"
-                                        y2="390"
-                                    />
-                                ))}
-                                <line className="flow-line-svg commercial" x1="570" y1="372" x2="830" y2="182" />
-                                <line className="flow-line-svg residential" x1="570" y1="410" x2="830" y2="612" />
-                            </svg>
-
-                            {sourceNodes.map((node) => (
-                                <article className={`flow-node-card ${node.tone}`} key={node.key} style={{ left: "2.5%", top: `${(node.y / FLOW_DIAGRAM_HEIGHT) * 100}%`, transform: "translateY(-50%)" }}>
-                                    <div className="flow-node-icon">{node.icon}</div>
-                                    <div className="flow-node-copy">
-                                        <span className="flow-label">{node.title}</span>
-                                        <strong>{node.value}</strong>
-                                        <small>{node.percent} · {node.note}</small>
-                                    </div>
-                                    <div className="flow-tooltip" role="tooltip">
-                                        <strong>{node.title}</strong>
-                                        <div className="flow-tooltip-lines">
-                                            {node.tooltip.map((line) => (
-                                                <span key={line}>{line}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </article>
-                            ))}
-
-                            <article className="flow-node-card hub hub-center">
-                                <div className="flow-node-icon">⚙</div>
-                                <div className="flow-node-copy">
-                                    <span className="flow-label">Energy System</span>
-                                    <strong>{formatEnergy(BASE_DEMAND_MWH)}</strong>
-                                    <small>{numberFormatter.format(100)}% system balancing target</small>
+                    <div className="flow-column">
+                        <article className="panel pipeline-panel">
+                            <div className="panel-head energy-flow-head">
+                                <div>
+                                    <h3>Energy Flow Diagram</h3>
+                                    <p>Flow with amounts and percentages across sources, the energy system, and connected loads.</p>
                                 </div>
-                                <div className="hub-subnodes">
-                                    {systemSubnodes.map((node) => (
-                                        <div className="hub-subnode" key={node.key}>
-                                            <span>{node.label}</span>
-                                            <strong>{node.value}</strong>
-                                            <small>{node.note}</small>
-                                            <div className="flow-tooltip flow-tooltip-subnode" role="tooltip">
-                                                <strong>{node.label}</strong>
+                                <div className="flow-head-actions">
+                                    <span className="flow-period">30 days</span>
+                                    <button
+                                        className="secondary-btn"
+                                        type="button"
+                                        disabled={exportingFormat !== ""}
+                                        onClick={() => handleExport("png")}
+                                    >
+                                        {exportingFormat === "png" ? "Exporting PNG..." : "Export PNG"}
+                                    </button>
+                                    <button
+                                        className="secondary-btn"
+                                        type="button"
+                                        disabled={exportingFormat !== ""}
+                                        onClick={() => handleExport("pdf")}
+                                    >
+                                        {exportingFormat === "pdf" ? "Exporting PDF..." : "Export PDF"}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="diagram-export-surface" ref={diagramExportRef}>
+                                <div className="node-link-board" aria-label="energy flow diagram">
+                                    <svg className="flow-network-lines" viewBox={`0 0 1000 ${FLOW_DIAGRAM_HEIGHT}`} preserveAspectRatio="none" aria-hidden="true">
+                                        {sourceNodes.map((node) => (
+                                            <line
+                                                className={`flow-line-svg ${node.tone}`}
+                                                key={`${node.key}-line`}
+                                                x1="180"
+                                                y1={node.y}
+                                                x2="430"
+                                                y2={flowHubCenterY}
+                                            />
+                                        ))}
+                                        <line className="flow-line-svg commercial" x1="570" y1={flowHubToCommercialY} x2="830" y2={flowCommercialTargetY} />
+                                        <line className="flow-line-svg residential" x1="570" y1={flowHubToResidentialY} x2="830" y2={flowResidentialTargetY} />
+                                    </svg>
+
+                                    {sourceNodes.map((node) => (
+                                        <article className={`flow-node-card ${node.tone}`} key={node.key} style={{ left: "2.5%", top: `${(node.y / FLOW_DIAGRAM_HEIGHT) * 100}%`, transform: "translateY(-50%)" }}>
+                                            <div className="flow-node-icon">{node.icon}</div>
+                                            <div className="flow-node-copy">
+                                                <span className="flow-label">{node.title}</span>
+                                                <strong>{node.value}</strong>
+                                                <small>{node.percent} · {node.note}</small>
+                                            </div>
+                                            <div className="flow-tooltip" role="tooltip">
+                                                <strong>{node.title}</strong>
                                                 <div className="flow-tooltip-lines">
                                                     {node.tooltip.map((line) => (
                                                         <span key={line}>{line}</span>
                                                     ))}
                                                 </div>
                                             </div>
-                                        </div>
+                                        </article>
                                     ))}
-                                </div>
-                            </article>
 
-                            {demandNodes.map((node) => (
-                                <article className={`flow-node-card ${node.tone} ${node.position}`} key={node.key}>
-                                    <div className="flow-node-icon">{node.icon}</div>
-                                    <div className="flow-node-copy">
-                                        <span className="flow-label">{node.title}</span>
-                                        <strong>{node.value}</strong>
-                                        <small>{node.percent} · {node.note}</small>
-                                    </div>
-                                    <div className="flow-tooltip" role="tooltip">
-                                        <strong>{node.title}</strong>
-                                        <div className="flow-tooltip-lines">
-                                            {node.tooltip.map((line) => (
-                                                <span key={line}>{line}</span>
+                                    <article className="flow-node-card hub hub-center">
+                                        <div className="flow-node-icon">⚙</div>
+                                        <div className="flow-node-copy">
+                                            <span className="flow-label">Energy System</span>
+                                            <strong>{formatEnergy(BASE_DEMAND_MWH)}</strong>
+                                            <small>{numberFormatter.format(100)}% system balancing target</small>
+                                        </div>
+                                        <div className="hub-subnodes">
+                                            {systemSubnodes.map((node) => (
+                                                <div className="hub-subnode" key={node.key}>
+                                                    <span>{node.label}</span>
+                                                    <strong>{node.value}</strong>
+                                                    <small>{node.note}</small>
+                                                </div>
                                             ))}
                                         </div>
-                                    </div>
-                                </article>
-                            ))}
+                                    </article>
 
-                            {flowLinks.map((link) => (
-                                <div
-                                    className={`flow-link-path ${link.className}`}
-                                    key={link.key}
-                                    aria-hidden="true"
-                                    style={link.badgeRight !== undefined ? { right: `${link.badgeRight}%`, top: link.badgeTop } : { left: `${link.badgeLeft}%`, top: link.badgeTop }}
-                                >
-                                    <div className="flow-link-badge">
-                                        <strong>{link.amount}</strong>
-                                        <span>{link.percent}</span>
+                                    {demandNodes.map((node) => (
+                                        <article className={`flow-node-card ${node.tone} ${node.position}`} key={node.key}>
+                                            <div className="flow-node-icon">{node.icon}</div>
+                                            <div className="flow-node-copy">
+                                                <span className="flow-label">{node.title}</span>
+                                                <strong>{node.value}</strong>
+                                                <small>{node.percent} · {node.note}</small>
+                                            </div>
+                                            <div className="flow-tooltip" role="tooltip">
+                                                <strong>{node.title}</strong>
+                                                <div className="flow-tooltip-lines">
+                                                    {node.tooltip.map((line) => (
+                                                        <span key={line}>{line}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </article>
+                                    ))}
+
+                                    {flowLinks.map((link) => (
+                                        <div
+                                            className={`flow-link-path ${link.className}`}
+                                            key={link.key}
+                                            aria-hidden="true"
+                                            style={link.badgeRight !== undefined ? { right: `${link.badgeRight}%`, top: link.badgeTop } : { left: `${link.badgeLeft}%`, top: link.badgeTop }}
+                                        >
+                                            <div className="flow-link-badge">
+                                                <strong>{link.amount}</strong>
+                                                <span>{link.percent}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    <div className="flow-legend" aria-label="diagram legend">
+                                        {legendItems.map((item) => (
+                                            <div className="flow-legend-item" key={item.key}>
+                                                <span className={`flow-legend-swatch ${item.tone}`} />
+                                                <span>{item.label}</span>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
-                            ))}
-
-                            <div className="flow-legend" aria-label="diagram legend">
-                                {legendItems.map((item) => (
-                                    <div className="flow-legend-item" key={item.key}>
-                                        <span className={`flow-legend-swatch ${item.tone}`} />
-                                        <span>{item.label}</span>
-                                    </div>
-                                ))}
                             </div>
-                        </div>
-                        </div>
+                        </article>
 
-                        <div className="pipeline-summary-chips">
+                        <div className="pipeline-summary-chips pipeline-summary-chips-inline">
                             <div className="chip">
                                 <span>Primary source</span>
                                 <strong>
@@ -1001,122 +704,304 @@ function App() {
                             </div>
                             <div className="chip">
                                 <span>Resource mix</span>
-                                <strong>{resourceMix || "No renewable assets configured yet."}</strong>
+                                <strong>{resourceMix || "No renewable sources are active in this view."}</strong>
                             </div>
                             <div className="chip chip-breakdown">
                                 <span>Generation split</span>
                                 <strong>
                                     {typeBreakdown.length > 0
                                         ? typeBreakdown.map((item) => `${item.label} ${item.value}`).join(" • ")
-                                        : "No renewable generation available yet."}
+                                        : "No renewable generation is currently shown."}
                                 </strong>
                             </div>
                             <div className="chip chip-breakdown">
                                 <span>Other renewables</span>
-                                <strong>{otherRenewableGeneration > 0 ? formatEnergy(otherRenewableGeneration) : "No battery or biomass output yet."}</strong>
+                                <strong>{otherRenewableGeneration > 0 ? formatEnergy(otherRenewableGeneration) : "No storage or thermal renewable output is active."}</strong>
                             </div>
                         </div>
-                    </article>
+                    </div>
 
-                    <article className="panel resource-panel">
-                        <div className="panel-head resource-panel-head">
-                            <div>
-                                <h3>Renewable Customization</h3>
-                                <p>Choose a resource type, enter its parameters, and update the dashboard immediately.</p>
-                            </div>
-                            <div className="resource-count">{resources.length} assets</div>
-                        </div>
-
-                        <div className="resource-type-grid">
-                            {Object.entries(resourceTypeConfig).map(([type, config]) => (
-                                <button
-                                    type="button"
-                                    className={`resource-type-card ${selectedType === type ? "active" : ""}`}
-                                    key={type}
-                                    onClick={() => handleTypeChange(type)}
-                                >
-                                    <span className="resource-type-icon">{config.icon}</span>
-                                    <strong>{config.label}</strong>
-                                    <small>{config.description}</small>
-                                </button>
-                            ))}
-                        </div>
-
-                        <form className="resource-form" onSubmit={handleSubmit}>
-                            <div className="resource-form-grid">
-                                {commonFields.map(renderField)}
-                                {selectedConfig.fields.map(renderField)}
-                            </div>
-
-                            <div className="resource-form-actions">
-                                <button className="primary-btn" type="submit">
-                                    Add {selectedConfig.label}
-                                </button>
-                                <button className="secondary-btn" type="button" onClick={handleReset}>
-                                    Reset
-                                </button>
-                            </div>
-                        </form>
-
-                        <div className="resource-list">
-                            <div className="resource-list-head">
-                                <h4>Configured resources</h4>
-                                <span>{resources.length > 0 ? `${resources.length} total` : "No assets added"}</span>
-                            </div>
-
-                            {resources.length === 0 ? (
-                                <div className="resource-empty-state">
-                                    Add a resource to test how renewable generation changes grid import and cost.
+                    <aside className="analytics-rail" aria-label="energy analytics">
+                        <article className="panel analytics-card analytics-card-large">
+                            <div className="panel-head analytics-head">
+                                <div>
+                                    <h3>Supply vs Demand</h3>
+                                    <p>30-day demand view showing how renewable supply and grid import combine to meet daily demand.</p>
                                 </div>
-                            ) : (
-                                resources.map((resource) => (
-                                    <article className="resource-item" key={resource.id}>
-                                        <div className="resource-item-top">
-                                            <div>
-                                                <div className="resource-badges">
-                                                    <span className={`resource-pill ${resource.type}`}>{resourceTypeConfig[resource.type].label}</span>
-                                                    <span className="resource-pill muted">{titleCase(resource.status)}</span>
+                            </div>
+
+                            <div className="chart-shell supply-demand-shell">
+                                <div className="supply-demand-bars" role="img" aria-label="30 day supply versus demand chart">
+                                    {monthlySupplyDemand.map((item, index) => (
+                                        <div className="supply-demand-column" key={item.label} tabIndex={0}>
+                                            <div className="supply-demand-bar-wrap">
+                                                <span
+                                                    className="supply-demand-demand-line"
+                                                    style={{ bottom: `${(item.demand / monthlySupplyDemandMax) * 100}%` }}
+                                                />
+                                                <div className="supply-demand-bar">
+                                                    <span
+                                                        className="supply-demand-segment renewable"
+                                                        style={{ height: `${(item.renewable / monthlySupplyDemandMax) * 100}%` }}
+                                                    />
+                                                    <span
+                                                        className="supply-demand-segment grid"
+                                                        style={{ height: `${(item.grid / monthlySupplyDemandMax) * 100}%` }}
+                                                    />
                                                 </div>
-                                                <h4>{resource.name}</h4>
-                                                <p>{resource.site}</p>
+                                                <div className="chart-hover-card supply-demand-tooltip">
+                                                    <strong>Day {index + 1}</strong>
+                                                    <span>Demand: {formatEnergyKwh(item.demand)}</span>
+                                                    <span>Renewables: {formatEnergyKwh(item.renewable)}</span>
+                                                    <span>Grid import: {formatEnergyKwh(item.grid)}</span>
+                                                </div>
                                             </div>
-
-                                            <button
-                                                className="icon-btn"
-                                                type="button"
-                                                onClick={() => handleRemove(resource.id)}
-                                            >
-                                                Remove
-                                            </button>
+                                            <span className="supply-demand-label">{index + 1}</span>
                                         </div>
+                                    ))}
+                                </div>
 
-                                        <div className="resource-metrics">
-                                            <div>
-                                                <span>Capacity</span>
-                                                <strong>{numberFormatter.format(resource.capacityKw)} kW</strong>
-                                            </div>
-                                            <div>
-                                                <span>Output</span>
-                                                <strong>{formatEnergy(resource.annualOutputMWh)}</strong>
-                                            </div>
-                                            <div>
-                                                <span>Investment</span>
-                                                <strong>{formatCurrency(resource.investmentCost)}</strong>
-                                            </div>
+                                <div className="chart-legend compact">
+                                    <span><i className="legend-dot demand-line" /> Total demand</span>
+                                    <span><i className="legend-dot supply-line" /> Renewable supply</span>
+                                    <span><i className="legend-dot grid" /> Grid import</span>
+                                </div>
+
+                                <div className="chart-summary-grid">
+                                    <div>
+                                        <span>Peak demand day</span>
+                                        <strong>{monthlySupplyDemand.reduce((peak, item) => (item.demand > peak.demand ? item : peak), monthlySupplyDemand[0]).label}</strong>
+                                    </div>
+                                    <div>
+                                        <span>30 day renewable share</span>
+                                        <strong>{formatPercent(renewableShare)}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article className="panel analytics-card analytics-card-medium">
+                            <div className="panel-head analytics-head">
+                                <div>
+                                    <h3>Daily Energy Balance</h3>
+                                    <p>Monthly balance view with grid import above zero, consumption below zero, and a net-balance line.</p>
+                                </div>
+                            </div>
+
+                            <div className="balance-chart-shell">
+                                <div className="balance-y-axis" aria-hidden="true">
+                                    <span>{formatEnergyKwh(balanceAxisTicks[0])}</span>
+                                    <span>{formatEnergyKwh(balanceAxisTicks[1])}</span>
+                                    <span>0 kWh</span>
+                                    <span>-{formatEnergyKwh(Math.abs(balanceAxisTicks[3])).replace(" kWh", "")}</span>
+                                    <span>-{formatEnergyKwh(Math.abs(balanceAxisTicks[4])).replace(" kWh", "")}</span>
+                                </div>
+
+                                <div className="balance-chart-stage">
+                                    <div className="balance-axis-head">
+                                        <div className="balance-y-axis-title">Energy (kWh)</div>
+                                        <div className="balance-y-axis-title balance-y-axis-title-right">Net (kWh)</div>
+                                    </div>
+                                    <div className="balance-chart-frame">
+                                        <div className="balance-grid-lines" aria-hidden="true">
+                                            {[0, 1, 2, 3, 4].map((line) => (
+                                                <span key={line} className="balance-grid-line" />
+                                            ))}
                                         </div>
-
-                                        <div className="resource-detail-grid">
-                                            {resource.customFields.slice(0, 4).map((field) => (
-                                                <div className="resource-detail" key={field.label}>
-                                                    <span>{field.label}</span>
-                                                    <strong>{field.value}{field.suffix ? ` ${field.suffix}` : ""}</strong>
+                                        <span className="balance-zero-line" aria-hidden="true" />
+                                        <svg className="balance-net-overlay" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                                            <path className="balance-net-line" d={balanceLinePath} />
+                                            {balanceLinePoints.map((point, index) => (
+                                                <circle className="balance-net-point" key={monthlyBalanceChart[index].label} cx={point.x} cy={point.y} r="0.75" />
+                                            ))}
+                                        </svg>
+                                        <div className="balance-chart" role="img" aria-label="Daily energy balance by day of month">
+                                            {monthlyBalanceChart.map((item) => (
+                                                <div className="balance-column" key={item.label} tabIndex={0}>
+                                                    <div className="balance-stack-wrap">
+                                                        <div className="balance-positive-zone">
+                                                            <div className="balance-positive-stack">
+                                                                <span
+                                                                    className="balance-segment grid"
+                                                                    style={{ height: `${(item.gridImport / balanceAxisMax) * 100}%` }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="balance-negative-zone">
+                                                            <span
+                                                                className="balance-consumption-bar"
+                                                                style={{ height: `${(item.consumption / balanceAxisMax) * 100}%` }}
+                                                            />
+                                                        </div>
+                                                        <div className="chart-hover-card balance-tooltip">
+                                                            <strong>{item.displayLabel}</strong>
+                                                            <span>Consumption: {formatEnergyKwh(item.consumption)}</span>
+                                                            <span>Grid import: {formatEnergyKwh(item.gridImport)}</span>
+                                                            <span>Renewables: {formatEnergyKwh(item.renewable)}</span>
+                                                            <span>Net balance: {numberFormatter.format(item.netBalanceRatio)}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
-                                    </article>
-                                ))
-                            )}
-                        </div>
+                                    </div>
+                                    <div className="balance-axis-labels" aria-hidden="true">
+                                        {monthlyBalanceChart.map((item, index) => (
+                                            <span key={item.label}>{index % 3 === 0 || index === monthlyBalanceChart.length - 1 ? item.displayLabel : ""}</span>
+                                        ))}
+                                    </div>
+                                    <div className="balance-x-axis-title">Days of month</div>
+                                </div>
+                            </div>
+
+                            <div className="chart-legend balance-legend">
+                                {activeBalanceLegend.map((item) => (
+                                    <span key={item.key}><i className={`legend-dot ${item.tone}`} /> {item.label}</span>
+                                ))}
+                            </div>
+                        </article>
+
+                    </aside>
+                </div>
+
+                <div className="analytics-mini-grid analytics-mini-grid-wide analytics-mini-grid-triple">
+                    <article className="panel analytics-card analytics-card-small">
+                                <div className="panel-head analytics-head">
+                                    <div>
+                                        <h3>Daily Load Profile</h3>
+                                        <p>Average day power profile with peak periods, average band, and point hover details.</p>
+                                    </div>
+                                </div>
+
+                                <div className="chart-shell mini-shell load-profile-shell">
+                                    <div className="load-profile-layout">
+                                        <div className="load-profile-y-axis" aria-hidden="true">
+                                            {loadYAxisTicks.slice().reverse().map((tick) => (
+                                                <span key={tick}>{formatPowerKw(tick)}</span>
+                                            ))}
+                                        </div>
+
+                                        <div className="load-profile-stage">
+                                            <svg className="line-chart load-profile-chart" viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} role="img" aria-label="Daily load profile chart">
+                                                {loadYAxisTicks.slice(1).map((tick) => {
+                                                    const y = CHART_HEIGHT - CHART_PADDING - ((tick / loadProfileMax) * (CHART_HEIGHT - (CHART_PADDING * 2)));
+                                                    return (
+                                                        <line
+                                                            className="chart-grid-line"
+                                                            key={tick}
+                                                            x1={CHART_PADDING}
+                                                            x2={CHART_WIDTH - CHART_PADDING}
+                                                            y1={y}
+                                                            y2={y}
+                                                        />
+                                                    );
+                                                })}
+                                                {peakWindows.map((window) => (
+                                                    <g key={window.label}>
+                                                        <rect
+                                                            className="load-peak-band"
+                                                            x={window.x}
+                                                            y={CHART_PADDING}
+                                                            width={window.width}
+                                                            height={CHART_HEIGHT - (CHART_PADDING * 2)}
+                                                        />
+                                                        <text className="load-peak-label" x={window.x + (window.width / 2)} y={CHART_PADDING - 6}>
+                                                            {window.label}
+                                                        </text>
+                                                    </g>
+                                                ))}
+                                                <path className="chart-area load-area" d={loadProfileAreaPath} />
+                                                <line className="load-average-line" x1={CHART_PADDING} x2={CHART_WIDTH - CHART_PADDING} y1={averageLoadY} y2={averageLoadY} />
+                                                <text className="load-average-label" x={CHART_WIDTH - CHART_PADDING + 10} y={averageLoadY + 4}>Avg</text>
+                                                <path className="chart-line load-line" d={loadProfilePath} />
+                                                {loadProfilePoints.map((point, index) => (
+                                                    <g className="load-point-group" key={dailyLoadProfile[index].hour}>
+                                                        {(() => {
+                                                            const tooltipWidth = 92;
+                                                            const tooltipCenterX = Math.min(
+                                                                CHART_WIDTH - (tooltipWidth / 2) - 4,
+                                                                Math.max((tooltipWidth / 2) + 4, point.x),
+                                                            );
+
+                                                            return (
+                                                                <>
+                                                        <circle
+                                                            className={`load-point ${peakPointIndexes.has(index) ? "peak" : "base"}`}
+                                                            cx={point.x}
+                                                            cy={point.y}
+                                                            r="3.2"
+                                                        />
+                                                        <g className="load-point-tooltip">
+                                                            <rect x={tooltipCenterX - (tooltipWidth / 2)} y={point.y - 46} rx="9" ry="9" width={tooltipWidth} height="32" />
+                                                            <text x={tooltipCenterX} y={point.y - 30}>{`${String(dailyLoadProfile[index].hour).padStart(2, "0")}:00`}</text>
+                                                            <text x={tooltipCenterX} y={point.y - 18}>{formatPowerKw(dailyLoadProfile[index].load)}</text>
+                                                        </g>
+                                                                </>
+                                                            );
+                                                        })()}
+                                                    </g>
+                                                ))}
+                                            </svg>
+
+                                            <div className="load-profile-x-axis" aria-hidden="true">
+                                                {[0, 3, 6, 9, 12, 15, 18, 21].map((hour) => (
+                                                    <span key={hour}>{`${String(hour).padStart(2, "0")}:00`}</span>
+                                                ))}
+                                            </div>
+                                            <div className="load-profile-x-title">Time of Day</div>
+                                        </div>
+                                    </div>
+                                </div>
+                    </article>
+
+                    <article className="panel analytics-card analytics-card-small analytics-card-compact">
+                                <div className="panel-head analytics-head">
+                                    <div>
+                                        <h3>Technology Capacity</h3>
+                                        <p>Installed capacity by technology.</p>
+                                    </div>
+                                </div>
+
+                                <div className="capacity-list">
+                                    {technologyCapacity.map((item) => (
+                                        <div className="capacity-row" key={item.key}>
+                                            <div className="capacity-meta">
+                                                <span>{item.label}</span>
+                                                <strong>{numberFormatter.format(item.value)} kW</strong>
+                                            </div>
+                                            <div className="capacity-bar-track">
+                                                <span className={`capacity-bar ${item.tone}`} style={{ width: `${capacityMax > 0 ? (item.value / capacityMax) * 100 : 0}%` }} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                    </article>
+
+                    <article className="panel analytics-card analytics-card-small analytics-card-compact">
+                                <div className="panel-head analytics-head">
+                                    <div>
+                                        <h3>Cost Contribution</h3>
+                                        <p>Monthly cost drivers and renewable offset.</p>
+                                    </div>
+                                </div>
+
+                                <div className="cost-list">
+                                    {costContribution.map((item) => (
+                                        <div className="cost-row" key={item.key}>
+                                            <div className="cost-meta">
+                                                <span>{item.label}</span>
+                                                <strong>{formatCurrency(item.value)}</strong>
+                                            </div>
+                                            <div className="cost-bar-track">
+                                                <span className={`cost-bar ${item.tone}`} style={{ width: `${costContributionMax > 0 ? (item.value / costContributionMax) * 100 : 0}%` }} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <div className="cost-total-row">
+                                        <span>Net total cost</span>
+                                        <strong>{formatCurrency(totalCost)}</strong>
+                                    </div>
+                                </div>
                     </article>
                 </div>
 
