@@ -692,7 +692,8 @@ button {
 
 .balance-chart-frame {
   position: relative;
-  min-width: 720px;
+  width: 100%;
+  min-width: 0;
   height: 260px;
   overflow: visible;
 }
@@ -729,29 +730,29 @@ button {
 
 .balance-net-line {
   fill: none;
-  stroke: #8a63f6;
-  stroke-width: 0.55;
+  stroke: #3aa66b;
+  stroke-width: 0.9;
 }
 
 .balance-net-point {
-  fill: #8a63f6;
+  fill: #3aa66b;
 }
 
 .balance-chart {
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-columns: repeat(30, minmax(14px, 1fr));
-  gap: 5px;
+  grid-template-columns: repeat(30, minmax(0, 1fr));
+  gap: clamp(1px, 0.35vw, 5px);
   align-items: stretch;
   z-index: 2;
 }
 
 .balance-axis-labels {
   display: grid;
-  grid-template-columns: repeat(30, minmax(14px, 1fr));
-  gap: 5px;
-  min-width: 720px;
+  grid-template-columns: repeat(30, minmax(0, 1fr));
+  gap: clamp(1px, 0.35vw, 5px);
+  min-width: 0;
   margin-top: 8px;
   color: #7f8da2;
   font-size: 10px;
@@ -800,6 +801,7 @@ button {
   position: absolute;
   left: 0;
   right: 0;
+  top: 0;
   bottom: 0;
   display: flex;
   flex-direction: column-reverse;
@@ -823,7 +825,7 @@ button {
 }
 
 .balance-segment.grid {
-  background: #9aa9bd;
+  background: #2f80ed;
 }
 
 .balance-tooltip {
@@ -835,8 +837,8 @@ button {
   background: #f24848;
 }
 
-.legend-dot.net-balance {
-  background: #8a63f6;
+.legend-dot.renewable-line {
+  background: #3aa66b;
 }
 
 .balance-legend {
@@ -1044,7 +1046,7 @@ button {
   display: grid;
   grid-template-rows: minmax(0, 1fr);
   gap: 14px;
-  padding: 10px;
+  padding: 14px;
   border-radius: 24px;
   background: #fff;
   min-height: 0;
@@ -1053,8 +1055,10 @@ button {
 
 .node-link-board {
   position: relative;
+  min-height: 720px;
   min-height: 0;
   height: 100%;
+  padding: 24px 20px 74px;
   border-radius: 24px;
   border: 1px solid #dbe5f1;
   background:
@@ -1132,18 +1136,23 @@ button {
 
 .flow-node-card {
   position: absolute;
-  width: 180px;
-  padding: 12px 10px;
+  width: clamp(150px, 15vw, 184px);
+  padding: 12px;
   display: flex;
-  gap: 10px;
-  align-items: center;
+  gap: 12px;
+  align-items: flex-start;
   z-index: 2;
   cursor: default;
 }
 
+.flow-node-card.flow-source-node {
+  transform: translateY(-50%);
+}
+
 .flow-node-copy {
   display: grid;
-  gap: 4px;
+  gap: 3px;
+  min-width: 0;
 }
 
 .flow-node-copy strong,
@@ -1152,44 +1161,38 @@ button {
 }
 
 .flow-node-icon {
-  width: 48px;
-  height: 48px;
-  flex: 0 0 48px;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
   border-radius: 999px;
   display: grid;
   place-items: center;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   border: 2px solid currentColor;
   background: #fff;
 }
 
 .flow-node-card strong {
-  font-size: 18px;
+  font-size: clamp(16px, 1.1vw, 18px);
   line-height: 1.15;
 }
 
 .flow-node-card small {
   color: #5f7085;
-  font-size: 12px;
-  line-height: 1.45;
+  font-size: 11px;
+  line-height: 1.35;
 }
 
 .flow-node-card.grid {
-  top: 9%;
-  left: 2.5%;
   color: #5f7085;
 }
 
 .flow-node-card.wind {
-  top: 41%;
-  left: 2.5%;
   color: #67b348;
 }
 
 .flow-node-card.solar {
-  bottom: 9%;
-  left: 2.5%;
   color: #f0ad12;
 }
 
@@ -1212,9 +1215,9 @@ button {
 .flow-node-card.hub {
   top: 53%;
   left: 50%;
-  width: 196px;
-  min-height: 286px;
-  padding: 14px;
+  width: 220px;
+  min-height: 272px;
+  padding: 16px;
   transform: translate(-50%, -50%);
   border-radius: 18px;
   background: linear-gradient(180deg, #f8f1ff, #efe6ff);
@@ -1228,14 +1231,14 @@ button {
 
 .hub-subnodes {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 .hub-subnode {
   position: relative;
-  padding: 7px 9px;
+  padding: 8px 10px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(165, 122, 247, 0.28);
@@ -1276,13 +1279,13 @@ button {
 }
 
 .flow-node-card.commercial {
-  top: 12%;
+  top: 13%;
   right: 2.5%;
   color: #ef5a51;
 }
 
 .flow-node-card.residential {
-  bottom: 12%;
+  bottom: 13%;
   right: 2.5%;
   color: #ef5a51;
 }
@@ -1294,32 +1297,32 @@ button {
 
 .flow-link-path.grid-to-hub {
   top: 18%;
-  left: 28%;
+  left: 24%;
 }
 
 .flow-link-path.wind-to-hub {
   top: 44%;
-  left: 30%;
+  left: 25%;
 }
 
 .flow-link-path.solar-to-hub {
   top: 67%;
-  left: 28%;
+  left: 24%;
 }
 
 .flow-link-path.hub-to-commercial {
-  top: 18%;
-  right: 21%;
+  top: 20%;
+  right: 17%;
 }
 
 .flow-link-path.hub-to-residential {
-  top: 64%;
-  right: 20%;
+  top: 62%;
+  right: 17%;
 }
 
 .flow-link-badge {
-  min-width: 110px;
-  padding: 8px 10px;
+  min-width: 98px;
+  padding: 8px 9px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.94);
   border: 1px solid #dde6f2;
@@ -1362,7 +1365,7 @@ button {
 
 .flow-link-badge strong {
   display: block;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.3;
 }
 
@@ -1370,7 +1373,7 @@ button {
   display: block;
   margin-top: 2px;
   color: #60718a;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .flow-tooltip {
@@ -1421,11 +1424,17 @@ button {
 }
 
 .flow-legend {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 18px;
   display: flex;
   flex-wrap: wrap;
   gap: 12px 16px;
   align-items: center;
   padding: 8px 4px 0;
+  z-index: 2;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(246, 249, 253, 0.92) 34%, rgba(246, 249, 253, 0.98) 100%);
 }
 
 .flow-legend-item {
@@ -1592,41 +1601,37 @@ button {
   }
 
   .flow-node-card {
-    width: 170px;
+    width: 160px;
   }
 
   .flow-node-card.hub {
     width: 210px;
-    min-height: 340px;
+    min-height: 320px;
   }
 
   .flow-link-path.grid-to-hub {
     top: 20%;
-    left: 27%;
+    left: 22%;
   }
 
   .flow-link-path.wind-to-hub {
     top: 44%;
-    left: 28%;
+    left: 23%;
   }
 
   .flow-link-path.solar-to-hub {
     top: 67%;
-    left: 27%;
+    left: 22%;
   }
 
   .flow-link-path.hub-to-commercial {
     top: 19%;
-    right: 18%;
+    right: 14%;
   }
 
   .flow-link-path.hub-to-residential {
     top: 65%;
-    right: 18%;
-  }
-
-  .pipeline-summary-chips {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    right: 14%;
   }
 
   .analytics-mini-grid,
@@ -1651,10 +1656,23 @@ button {
 
   .kpi-row,
   .pipeline-summary-chips,
-  .balance-chart,
   .analytics-mini-grid,
   .chart-summary-grid {
     grid-template-columns: 1fr;
+  }
+
+  .balance-chart-shell {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .balance-chart {
+    gap: 2px;
+  }
+
+  .balance-axis-labels {
+    gap: 2px;
+    font-size: 9px;
   }
 
   .node-link-board {
@@ -1676,9 +1694,14 @@ button {
     min-width: 0;
   }
 
+  .flow-node-card.flow-source-node {
+    transform: none;
+  }
+
   .flow-node-card.hub {
     width: auto;
     min-height: 0;
+    transform: none;
   }
 
   .flow-link-path {
@@ -1700,6 +1723,12 @@ button {
   .flow-legend {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .flow-legend {
+    position: static;
+    background: transparent;
+    padding-top: 0;
   }
 
   .chart-axis-labels {

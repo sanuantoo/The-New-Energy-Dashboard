@@ -3,11 +3,21 @@ import { jsPDF } from "jspdf";
 import { useRef, useState } from "react";
 import "./App.css";
 import OpenLayersMap from "./components/OpenLayersMap";
+import {
+    BASE_COST_EUR,
+    BASE_DEMAND_MWH,
+    defaultResources,
+    formatCurrency,
+    formatEnergy,
+    formatEnergyKwh,
+    formatPercent,
+    formatPowerKw,
+    getDashboardKpis,
+    getDashboardSnapshot,
+    numberFormatter,
+    resourceTypeConfig,
+} from "./dashboardMetrics";
 
-const BASE_DEMAND_MWH = 45.19;
-const BASE_COST_EUR = 14292;
-const GRID_ENERGY_RATE = 210;
-const MONTHLY_CAPEX_FACTOR = 0.012;
 const FLOW_DIAGRAM_HEIGHT = 680;
 const FLOW_GRID_SOURCE_Y_RATIO = 92 / 820;
 const FLOW_RENEWABLE_SOURCE_START_RATIO = 230 / 820;
@@ -17,64 +27,10 @@ const FLOW_HUB_TO_COMMERCIAL_Y_RATIO = 372 / 820;
 const FLOW_HUB_TO_RESIDENTIAL_Y_RATIO = 410 / 820;
 const FLOW_COMMERCIAL_TARGET_Y_RATIO = 182 / 820;
 const FLOW_RESIDENTIAL_TARGET_Y_RATIO = 612 / 820;
-const DEFAULT_RENEWABLE_SHARE = 0.15;
-const DEFAULT_RENEWABLE_OUTPUT_MWH = BASE_DEMAND_MWH * DEFAULT_RENEWABLE_SHARE;
 const CHART_WIDTH = 360;
 const CHART_HEIGHT = 180;
 const CHART_PADDING = 22;
 const LOAD_PROFILE_MAX_KW = 100;
-
-const numberFormatter = new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-});
-
-const currencyFormatter = new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-});
-
-const resourceTypeConfig = {
-    pv: { label: "PV", icon: "☀" },
-    wind: { label: "Wind", icon: "🌀" },
-    battery: { label: "Battery", icon: "🔋" },
-    biomass: { label: "Biomass", icon: "🌿" },
-    geothermal: { label: "Geothermal", icon: "🌋" },
-    hydropower: { label: "Hydropower", icon: "💧" },
-};
-
-const defaultResources = [
-    {
-        id: "pv-default",
-        type: "pv",
-        name: "PV Supply",
-        capacityKw: 52,
-        annualOutputMWh: DEFAULT_RENEWABLE_OUTPUT_MWH,
-        investmentCost: 65000,
-    },
-];
-
-function formatEnergy(value) {
-    return `${numberFormatter.format(Math.max(value, 0))} MWh`;
-}
-
-function formatEnergyKwh(value) {
-    return `${numberFormatter.format(Math.max(value, 0) * 1000)} kWh`;
-}
-
-function formatPowerKw(value) {
-    return `${numberFormatter.format(Math.max(value, 0) * 1000)} kW`;
-}
-
-function formatCurrency(value) {
-    return currencyFormatter.format(Math.max(value, 0));
-}
-
-function formatPercent(value) {
-    return `${numberFormatter.format(Math.max(value, 0))}%`;
-}
 
 function getChartPoints(values, width, height, padding, maxValue) {
     if (values.length === 0) {
@@ -149,26 +105,20 @@ function App() {
     const [exportingFormat, setExportingFormat] = useState("");
 
     const resources = defaultResources;
-    const renewableGeneration = resources.reduce((total, resource) => total + resource.annualOutputMWh, 0);
-    const gridImport = Math.max(BASE_DEMAND_MWH - renewableGeneration, 0);
-    const amortizedCapex = resources.reduce(
-        (total, resource) => total + resource.investmentCost * MONTHLY_CAPEX_FACTOR,
-        0,
-    );
-    const avoidedGridCost = Math.min(BASE_DEMAND_MWH, renewableGeneration) * GRID_ENERGY_RATE;
-    const totalCost = Math.max(BASE_COST_EUR - avoidedGridCost + amortizedCapex, 0);
-    const renewableShare = BASE_DEMAND_MWH > 0
-        ? Math.min((renewableGeneration / BASE_DEMAND_MWH) * 100, 100)
-        : 0;
-    const commercialDemandShare = 65.4;
-    const residentialDemandShare = 100 - commercialDemandShare;
+    const {
+        amortizedCapex,
+        avoidedGridCost,
+        commercialDemand,
+        commercialDemandShare,
+        gridImport,
+        renewableGeneration,
+        renewableShare,
+        residentialDemand,
+        residentialDemandShare,
+        totalCost,
+    } = getDashboardSnapshot(resources);
 
-    const kpis = [
-        { icon: "⚡", title: "Total Demand", value: formatEnergy(BASE_DEMAND_MWH), note: "Demand baseline for 30 days" },
-        { icon: "⇄", title: "Grid Import", value: formatEnergy(gridImport), note: `${numberFormatter.format(100 - renewableShare)}% of demand supplied by grid` },
-        { icon: "☼", title: "Renewable Generation", value: formatEnergy(renewableGeneration), note: `${numberFormatter.format(renewableShare)}% of total demand supplied by renewables` },
-        { icon: "€", title: "Total Cost", value: formatCurrency(totalCost), note: "Operating cost plus monthly capex" },
-    ];
+    const kpis = getDashboardKpis(resources);
 
     const resourceMix = Object.keys(resourceTypeConfig)
         .map((type) => {
@@ -213,12 +163,9 @@ function App() {
     const geothermalGeneration = typeBreakdown.find((item) => item.type === "geothermal")?.output ?? 0;
     const hydropowerGeneration = typeBreakdown.find((item) => item.type === "hydropower")?.output ?? 0;
     const otherRenewableGeneration = Math.max(renewableGeneration - pvGeneration - windGeneration, 0);
-    const commercialDemand = (BASE_DEMAND_MWH * commercialDemandShare) / 100;
-    const residentialDemand = BASE_DEMAND_MWH - commercialDemand;
     const inverterThroughput = pvGeneration + windGeneration + hydropowerGeneration;
     const gridInterfaceLoad = gridImport;
     const thermalLoopOutput = geothermalGeneration + biomassGeneration;
-    const averageDailyDemand = BASE_DEMAND_MWH / 30;
 
     const renewableSourceTones = {
         pv: "solar",
@@ -297,13 +244,13 @@ function App() {
         ...item,
         displayLabel: `12/${String(index + 1).padStart(2, "0")}`,
         consumption: item.demand,
+        renewableUse: item.renewable,
         gridImport: item.grid,
-        netBalanceRatio: item.demand > 0 ? item.renewable / item.demand : 0,
     }));
     const activeBalanceLegend = [
         { key: "grid", label: "Grid Import", tone: "grid" },
         { key: "consumption", label: "Consumption", tone: "consumption" },
-        { key: "net-balance", label: "Net Balance", tone: "net-balance" },
+        { key: "renewable-line", label: "Renewable Use Line", tone: "renewable-line" },
     ];
     const loadProfileSeries = dailyLoadProfile.map((item) => item.load);
     const monthlySupplyDemandMax = Math.max(...monthlySupplyDemand.map((item) => item.demand), 1);
@@ -311,9 +258,9 @@ function App() {
     const balanceMax = Math.max(...monthlyBalanceChart.map((item) => item.demand), 1);
     const balanceAxisMax = Math.max(balanceMax, 1);
     const balanceAxisTicks = [balanceAxisMax, balanceAxisMax / 2, 0, -balanceAxisMax / 2, -balanceAxisMax];
-    const balanceLineSeries = monthlyBalanceChart.map((item) => item.netBalanceRatio);
-    const balanceLinePath = buildLinePath(balanceLineSeries, 100, 100, 2, 1);
-    const balanceLinePoints = getChartPoints(balanceLineSeries, 100, 100, 2, 1);
+    const balanceLineSeries = monthlyBalanceChart.map((item) => item.renewableUse);
+    const balanceLinePath = buildCenteredLinePath(balanceLineSeries, 100, 100, 2, balanceAxisMax);
+    const balanceLinePoints = getCenteredChartPoints(balanceLineSeries, 100, 100, 2, balanceAxisMax);
     const capacityMax = Math.max(...technologyCapacity.map((item) => item.value), 1);
     const costContributionMax = Math.max(...costContribution.map((item) => item.value), 1);
     const loadProfilePath = buildLinePath(loadProfileSeries, CHART_WIDTH, CHART_HEIGHT, CHART_PADDING, loadProfileMax);
@@ -612,7 +559,7 @@ function App() {
                                     </svg>
 
                                     {sourceNodes.map((node) => (
-                                        <article className={`flow-node-card ${node.tone}`} key={node.key} style={{ left: "2.5%", top: `${(node.y / FLOW_DIAGRAM_HEIGHT) * 100}%`, transform: "translateY(-50%)" }}>
+                                        <article className={`flow-node-card flow-source-node ${node.tone}`} key={node.key} style={{ left: "2.5%", top: `${(node.y / FLOW_DIAGRAM_HEIGHT) * 100}%` }}>
                                             <div className="flow-node-icon">{node.icon}</div>
                                             <div className="flow-node-copy">
                                                 <span className="flow-label">{node.title}</span>
@@ -692,33 +639,6 @@ function App() {
                                 </div>
                             </div>
                         </article>
-
-                        <div className="pipeline-summary-chips pipeline-summary-chips-inline">
-                            <div className="chip">
-                                <span>Primary source</span>
-                                <strong>
-                                    {renewableGeneration > 0
-                                        ? `Renewables offset ${numberFormatter.format(renewableShare)}% of monthly demand.`
-                                        : "Grid import currently covers full demand."}
-                                </strong>
-                            </div>
-                            <div className="chip">
-                                <span>Resource mix</span>
-                                <strong>{resourceMix || "No renewable sources are active in this view."}</strong>
-                            </div>
-                            <div className="chip chip-breakdown">
-                                <span>Generation split</span>
-                                <strong>
-                                    {typeBreakdown.length > 0
-                                        ? typeBreakdown.map((item) => `${item.label} ${item.value}`).join(" • ")
-                                        : "No renewable generation is currently shown."}
-                                </strong>
-                            </div>
-                            <div className="chip chip-breakdown">
-                                <span>Other renewables</span>
-                                <strong>{otherRenewableGeneration > 0 ? formatEnergy(otherRenewableGeneration) : "No storage or thermal renewable output is active."}</strong>
-                            </div>
-                        </div>
                     </div>
 
                     <aside className="analytics-rail" aria-label="energy analytics">
@@ -784,7 +704,7 @@ function App() {
                             <div className="panel-head analytics-head">
                                 <div>
                                     <h3>Daily Energy Balance</h3>
-                                    <p>Monthly balance view with grid import above zero, consumption below zero, and a net-balance line.</p>
+                                    <p>Monthly balance view with grid import above zero, consumption below zero, and a renewable-use line.</p>
                                 </div>
                             </div>
 
@@ -800,7 +720,7 @@ function App() {
                                 <div className="balance-chart-stage">
                                     <div className="balance-axis-head">
                                         <div className="balance-y-axis-title">Energy (kWh)</div>
-                                        <div className="balance-y-axis-title balance-y-axis-title-right">Net (kWh)</div>
+                                        <div className="balance-y-axis-title balance-y-axis-title-right">Renewables (kWh)</div>
                                     </div>
                                     <div className="balance-chart-frame">
                                         <div className="balance-grid-lines" aria-hidden="true">
@@ -836,9 +756,8 @@ function App() {
                                                         <div className="chart-hover-card balance-tooltip">
                                                             <strong>{item.displayLabel}</strong>
                                                             <span>Consumption: {formatEnergyKwh(item.consumption)}</span>
+                                                            <span>Renewable use: {formatEnergyKwh(item.renewableUse)}</span>
                                                             <span>Grid import: {formatEnergyKwh(item.gridImport)}</span>
-                                                            <span>Renewables: {formatEnergyKwh(item.renewable)}</span>
-                                                            <span>Net balance: {numberFormatter.format(item.netBalanceRatio)}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -866,142 +785,142 @@ function App() {
 
                 <div className="analytics-mini-grid analytics-mini-grid-wide analytics-mini-grid-triple">
                     <article className="panel analytics-card analytics-card-small">
-                                <div className="panel-head analytics-head">
-                                    <div>
-                                        <h3>Daily Load Profile</h3>
-                                        <p>Average day power profile with peak periods, average band, and point hover details.</p>
-                                    </div>
+                        <div className="panel-head analytics-head">
+                            <div>
+                                <h3>Daily Load Profile</h3>
+                                <p>Average day power profile with peak periods, average band, and point hover details.</p>
+                            </div>
+                        </div>
+
+                        <div className="chart-shell mini-shell load-profile-shell">
+                            <div className="load-profile-layout">
+                                <div className="load-profile-y-axis" aria-hidden="true">
+                                    {loadYAxisTicks.slice().reverse().map((tick) => (
+                                        <span key={tick}>{formatPowerKw(tick)}</span>
+                                    ))}
                                 </div>
 
-                                <div className="chart-shell mini-shell load-profile-shell">
-                                    <div className="load-profile-layout">
-                                        <div className="load-profile-y-axis" aria-hidden="true">
-                                            {loadYAxisTicks.slice().reverse().map((tick) => (
-                                                <span key={tick}>{formatPowerKw(tick)}</span>
-                                            ))}
-                                        </div>
-
-                                        <div className="load-profile-stage">
-                                            <svg className="line-chart load-profile-chart" viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} role="img" aria-label="Daily load profile chart">
-                                                {loadYAxisTicks.slice(1).map((tick) => {
-                                                    const y = CHART_HEIGHT - CHART_PADDING - ((tick / loadProfileMax) * (CHART_HEIGHT - (CHART_PADDING * 2)));
-                                                    return (
-                                                        <line
-                                                            className="chart-grid-line"
-                                                            key={tick}
-                                                            x1={CHART_PADDING}
-                                                            x2={CHART_WIDTH - CHART_PADDING}
-                                                            y1={y}
-                                                            y2={y}
-                                                        />
+                                <div className="load-profile-stage">
+                                    <svg className="line-chart load-profile-chart" viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} role="img" aria-label="Daily load profile chart">
+                                        {loadYAxisTicks.slice(1).map((tick) => {
+                                            const y = CHART_HEIGHT - CHART_PADDING - ((tick / loadProfileMax) * (CHART_HEIGHT - (CHART_PADDING * 2)));
+                                            return (
+                                                <line
+                                                    className="chart-grid-line"
+                                                    key={tick}
+                                                    x1={CHART_PADDING}
+                                                    x2={CHART_WIDTH - CHART_PADDING}
+                                                    y1={y}
+                                                    y2={y}
+                                                />
+                                            );
+                                        })}
+                                        {peakWindows.map((window) => (
+                                            <g key={window.label}>
+                                                <rect
+                                                    className="load-peak-band"
+                                                    x={window.x}
+                                                    y={CHART_PADDING}
+                                                    width={window.width}
+                                                    height={CHART_HEIGHT - (CHART_PADDING * 2)}
+                                                />
+                                                <text className="load-peak-label" x={window.x + (window.width / 2)} y={CHART_PADDING - 6}>
+                                                    {window.label}
+                                                </text>
+                                            </g>
+                                        ))}
+                                        <path className="chart-area load-area" d={loadProfileAreaPath} />
+                                        <line className="load-average-line" x1={CHART_PADDING} x2={CHART_WIDTH - CHART_PADDING} y1={averageLoadY} y2={averageLoadY} />
+                                        <text className="load-average-label" x={CHART_WIDTH - CHART_PADDING + 10} y={averageLoadY + 4}>Avg</text>
+                                        <path className="chart-line load-line" d={loadProfilePath} />
+                                        {loadProfilePoints.map((point, index) => (
+                                            <g className="load-point-group" key={dailyLoadProfile[index].hour}>
+                                                {(() => {
+                                                    const tooltipWidth = 92;
+                                                    const tooltipCenterX = Math.min(
+                                                        CHART_WIDTH - (tooltipWidth / 2) - 4,
+                                                        Math.max((tooltipWidth / 2) + 4, point.x),
                                                     );
-                                                })}
-                                                {peakWindows.map((window) => (
-                                                    <g key={window.label}>
-                                                        <rect
-                                                            className="load-peak-band"
-                                                            x={window.x}
-                                                            y={CHART_PADDING}
-                                                            width={window.width}
-                                                            height={CHART_HEIGHT - (CHART_PADDING * 2)}
-                                                        />
-                                                        <text className="load-peak-label" x={window.x + (window.width / 2)} y={CHART_PADDING - 6}>
-                                                            {window.label}
-                                                        </text>
-                                                    </g>
-                                                ))}
-                                                <path className="chart-area load-area" d={loadProfileAreaPath} />
-                                                <line className="load-average-line" x1={CHART_PADDING} x2={CHART_WIDTH - CHART_PADDING} y1={averageLoadY} y2={averageLoadY} />
-                                                <text className="load-average-label" x={CHART_WIDTH - CHART_PADDING + 10} y={averageLoadY + 4}>Avg</text>
-                                                <path className="chart-line load-line" d={loadProfilePath} />
-                                                {loadProfilePoints.map((point, index) => (
-                                                    <g className="load-point-group" key={dailyLoadProfile[index].hour}>
-                                                        {(() => {
-                                                            const tooltipWidth = 92;
-                                                            const tooltipCenterX = Math.min(
-                                                                CHART_WIDTH - (tooltipWidth / 2) - 4,
-                                                                Math.max((tooltipWidth / 2) + 4, point.x),
-                                                            );
 
-                                                            return (
-                                                                <>
-                                                        <circle
-                                                            className={`load-point ${peakPointIndexes.has(index) ? "peak" : "base"}`}
-                                                            cx={point.x}
-                                                            cy={point.y}
-                                                            r="3.2"
-                                                        />
-                                                        <g className="load-point-tooltip">
-                                                            <rect x={tooltipCenterX - (tooltipWidth / 2)} y={point.y - 46} rx="9" ry="9" width={tooltipWidth} height="32" />
-                                                            <text x={tooltipCenterX} y={point.y - 30}>{`${String(dailyLoadProfile[index].hour).padStart(2, "0")}:00`}</text>
-                                                            <text x={tooltipCenterX} y={point.y - 18}>{formatPowerKw(dailyLoadProfile[index].load)}</text>
-                                                        </g>
-                                                                </>
-                                                            );
-                                                        })()}
-                                                    </g>
-                                                ))}
-                                            </svg>
+                                                    return (
+                                                        <>
+                                                            <circle
+                                                                className={`load-point ${peakPointIndexes.has(index) ? "peak" : "base"}`}
+                                                                cx={point.x}
+                                                                cy={point.y}
+                                                                r="3.2"
+                                                            />
+                                                            <g className="load-point-tooltip">
+                                                                <rect x={tooltipCenterX - (tooltipWidth / 2)} y={point.y - 46} rx="9" ry="9" width={tooltipWidth} height="32" />
+                                                                <text x={tooltipCenterX} y={point.y - 30}>{`${String(dailyLoadProfile[index].hour).padStart(2, "0")}:00`}</text>
+                                                                <text x={tooltipCenterX} y={point.y - 18}>{formatPowerKw(dailyLoadProfile[index].load)}</text>
+                                                            </g>
+                                                        </>
+                                                    );
+                                                })()}
+                                            </g>
+                                        ))}
+                                    </svg>
 
-                                            <div className="load-profile-x-axis" aria-hidden="true">
-                                                {[0, 3, 6, 9, 12, 15, 18, 21].map((hour) => (
-                                                    <span key={hour}>{`${String(hour).padStart(2, "0")}:00`}</span>
-                                                ))}
-                                            </div>
-                                            <div className="load-profile-x-title">Time of Day</div>
-                                        </div>
+                                    <div className="load-profile-x-axis" aria-hidden="true">
+                                        {[0, 3, 6, 9, 12, 15, 18, 21].map((hour) => (
+                                            <span key={hour}>{`${String(hour).padStart(2, "0")}:00`}</span>
+                                        ))}
                                     </div>
+                                    <div className="load-profile-x-title">Time of Day</div>
                                 </div>
+                            </div>
+                        </div>
                     </article>
 
                     <article className="panel analytics-card analytics-card-small analytics-card-compact">
-                                <div className="panel-head analytics-head">
-                                    <div>
-                                        <h3>Technology Capacity</h3>
-                                        <p>Installed capacity by technology.</p>
+                        <div className="panel-head analytics-head">
+                            <div>
+                                <h3>Technology Capacity</h3>
+                                <p>Installed capacity by technology.</p>
+                            </div>
+                        </div>
+
+                        <div className="capacity-list">
+                            {technologyCapacity.map((item) => (
+                                <div className="capacity-row" key={item.key}>
+                                    <div className="capacity-meta">
+                                        <span>{item.label}</span>
+                                        <strong>{numberFormatter.format(item.value)} kW</strong>
+                                    </div>
+                                    <div className="capacity-bar-track">
+                                        <span className={`capacity-bar ${item.tone}`} style={{ width: `${capacityMax > 0 ? (item.value / capacityMax) * 100 : 0}%` }} />
                                     </div>
                                 </div>
-
-                                <div className="capacity-list">
-                                    {technologyCapacity.map((item) => (
-                                        <div className="capacity-row" key={item.key}>
-                                            <div className="capacity-meta">
-                                                <span>{item.label}</span>
-                                                <strong>{numberFormatter.format(item.value)} kW</strong>
-                                            </div>
-                                            <div className="capacity-bar-track">
-                                                <span className={`capacity-bar ${item.tone}`} style={{ width: `${capacityMax > 0 ? (item.value / capacityMax) * 100 : 0}%` }} />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                            ))}
+                        </div>
                     </article>
 
                     <article className="panel analytics-card analytics-card-small analytics-card-compact">
-                                <div className="panel-head analytics-head">
-                                    <div>
-                                        <h3>Cost Contribution</h3>
-                                        <p>Monthly cost drivers and renewable offset.</p>
-                                    </div>
-                                </div>
+                        <div className="panel-head analytics-head">
+                            <div>
+                                <h3>Cost Contribution</h3>
+                                <p>Monthly cost drivers and renewable offset.</p>
+                            </div>
+                        </div>
 
-                                <div className="cost-list">
-                                    {costContribution.map((item) => (
-                                        <div className="cost-row" key={item.key}>
-                                            <div className="cost-meta">
-                                                <span>{item.label}</span>
-                                                <strong>{formatCurrency(item.value)}</strong>
-                                            </div>
-                                            <div className="cost-bar-track">
-                                                <span className={`cost-bar ${item.tone}`} style={{ width: `${costContributionMax > 0 ? (item.value / costContributionMax) * 100 : 0}%` }} />
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <div className="cost-total-row">
-                                        <span>Net total cost</span>
-                                        <strong>{formatCurrency(totalCost)}</strong>
+                        <div className="cost-list">
+                            {costContribution.map((item) => (
+                                <div className="cost-row" key={item.key}>
+                                    <div className="cost-meta">
+                                        <span>{item.label}</span>
+                                        <strong>{formatCurrency(item.value)}</strong>
+                                    </div>
+                                    <div className="cost-bar-track">
+                                        <span className={`cost-bar ${item.tone}`} style={{ width: `${costContributionMax > 0 ? (item.value / costContributionMax) * 100 : 0}%` }} />
                                     </div>
                                 </div>
+                            ))}
+                            <div className="cost-total-row">
+                                <span>Net total cost</span>
+                                <strong>{formatCurrency(totalCost)}</strong>
+                            </div>
+                        </div>
                     </article>
                 </div>
 

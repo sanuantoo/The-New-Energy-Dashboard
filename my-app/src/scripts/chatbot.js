@@ -1,3 +1,5 @@
+import { defaultResources, getChatbotMetricOptions } from '../dashboardMetrics.js';
+
 document.addEventListener('DOMContentLoaded', function () {
     const chatbotHTML = `
         <div class="chatbot-icon" id="chatbotIcon" aria-label="Open Energy Bug chat">
@@ -53,19 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const messageInput = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
     const chatbotMessages = document.getElementById('chatbotMessages');
-    const metricOptions = [
-        { label: 'Self Consumption', value: '60%', description: 'The share of generated energy used directly on-site instead of being exported to the grid.' },
-        { label: 'Grid Impedence', value: '0.10 ohm', description: 'The opposition in the grid connection path; lower values usually indicate better power transfer and stability.' },
-        { label: 'Capacity Factor', value: '40%', description: 'How much energy was actually produced compared to the maximum possible output over the same period.' },
-        { label: 'CO2 Reduction', value: '78%', description: 'Estimated percentage decrease in carbon emissions due to renewable generation and efficiency improvements.' },
-        { label: 'Total demand', value: '1,250 kWh', description: 'Total electricity consumed by the site during the selected time window.' },
-        { label: 'Renewable generation', value: '780 kWh', description: 'Total electricity produced by renewable sources such as solar or wind in the selected period.' },
-        { label: 'Grid import', value: '470 kWh', description: 'Electricity taken from the grid to cover demand not met by on-site generation.' },
-        { label: 'Self sufficiency', value: '62%', description: 'The percentage of demand met by your own local generation without relying on grid imports.' },
-        { label: 'Peak demand', value: '85 kW', description: 'Highest short-interval power draw in the period, often used to calculate demand charges.' },
-        { label: 'Cost distribution', value: '55% fixed / 45% variable', description: 'How total energy cost is split between fixed fees and usage-based charges.' },
-        { label: 'Total cost', value: '$2,340', description: 'Overall energy expense for the period, including both fixed and variable charges.' },
-    ];
+    const metricOptions = getChatbotMetricOptions(defaultResources);
 
     let chatStarted = false;
     let isSending = false;
@@ -172,9 +162,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 addUserMessage(option.label);
                 addBotMessage(`${option.label}: ${option.value}. ${option.description}`);
 
-                if (option.label === 'Capacity Factor') {
-                    addCapacityFactorPrompt();
-                }
             });
             list.appendChild(button);
         });
