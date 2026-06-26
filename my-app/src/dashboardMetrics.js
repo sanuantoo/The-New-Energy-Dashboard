@@ -114,28 +114,64 @@ export function getDashboardKpis(resources = defaultResources) {
 
 export function getChatbotMetricOptions(resources = defaultResources) {
     const snapshot = getDashboardSnapshot(resources);
+    const componentDefinitions = {
+        "Grid Import": "Grid Import shows the portion of electricity demand covered by power purchased from the external grid when on-site generation is not enough.",
+        "Renewable Generation": "Renewable Generation measures the total electricity produced by on-site renewable assets during the current dashboard period.",
+        "Total Cost": "Total Cost combines operating energy costs with amortized capital costs to show the overall monthly cost of the energy system.",
+        "Capacity Factor": "Capacity Factor compares actual electricity produced with the maximum possible output over the same time window.",
+        "Commercial Demand": "Commercial Demand represents the electricity consumed by commercial facilities connected to the energy system in the current reporting period.",
+        "Residential Demand": "Residential Demand represents the electricity consumed by residential loads connected to the energy system in the current reporting period.",
+        "Average Daily Demand": "Average Daily Demand is the mean amount of electricity used per day across the 30-day dashboard window.",
+        "Energy Flow Diagram": "Energy Flow Diagram visualizes how electricity moves from grid and renewable sources through the energy system to connected demand loads.",
+        "Supply vs Demand": "Supply vs Demand compares daily electricity demand with renewable supply and grid import across the current 30-day view.",
+    };
+
     const kpis = getDashboardKpis(resources).map(({ title, value, note }) => ({
         label: title,
         value,
         description: note,
+        definition: componentDefinitions[title] ?? note,
     }));
 
     return [
         ...kpis,
         {
+            label: "Capacity Factor",
+            value: "Calculator available",
+            description: "Learn the formula and compute capacity factor from your inputs.",
+            definition: componentDefinitions["Capacity Factor"],
+        },
+        {
             label: "Commercial Demand",
             value: formatEnergy(snapshot.commercialDemand),
             description: `${numberFormatter.format(snapshot.commercialDemandShare)}% of total demand.`,
+            definition: componentDefinitions["Commercial Demand"],
         },
         {
             label: "Residential Demand",
             value: formatEnergy(snapshot.residentialDemand),
             description: `${numberFormatter.format(snapshot.residentialDemandShare)}% of total demand.`,
+            definition: componentDefinitions["Residential Demand"],
         },
         {
             label: "Average Daily Demand",
             value: formatEnergy(snapshot.averageDailyDemand),
             description: "Average daily demand across the 30-day dashboard view.",
+            definition: componentDefinitions["Average Daily Demand"],
+        },
+        {
+            label: "Energy Flow Diagram",
+            value: `${numberFormatter.format(snapshot.renewableShare)}% renewable share`,
+            description: "Diagram of source-to-load energy movement.",
+            definition: componentDefinitions["Energy Flow Diagram"],
+            navigationTarget: "energy-flow-diagram",
+        },
+        {
+            label: "Supply vs Demand",
+            value: formatEnergy(snapshot.averageDailyDemand),
+            description: "30-day demand and supply comparison chart.",
+            definition: componentDefinitions["Supply vs Demand"],
+            navigationTarget: "supply-vs-demand",
         },
     ];
 }

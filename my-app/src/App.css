@@ -161,6 +161,31 @@ button {
   padding: 18px;
 }
 
+.panel[data-chatbot-section] {
+  scroll-margin-top: 24px;
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.panel.chatbot-section-active {
+  border-color: #7aa7ff;
+  box-shadow: 0 0 0 3px rgba(76, 126, 245, 0.18), 0 24px 48px rgba(24, 39, 75, 0.14);
+  animation: chatbot-section-pulse 1.8s ease;
+}
+
+@keyframes chatbot-section-pulse {
+  0% {
+    transform: translateY(0);
+  }
+
+  25% {
+    transform: translateY(-2px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
 .map-panel {
   position: relative;
   min-height: 620px;

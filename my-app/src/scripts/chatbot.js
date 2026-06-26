@@ -56,10 +56,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const sendBtn = document.getElementById('sendBtn');
     const chatbotMessages = document.getElementById('chatbotMessages');
     const metricOptions = getChatbotMetricOptions(defaultResources);
+    const navigationAliases = {
+        'energy flow diagram': 'Energy Flow Diagram',
+        'supply vs demand': 'Supply vs Demand',
+        'supply and demand': 'Supply vs Demand',
+    };
 
     let chatStarted = false;
     let isSending = false;
     let capacityFactorFlow = null;
+    let highlightedSection = null;
+    let highlightedSectionTimer = null;
 
     chatbotIcon.addEventListener('click', () => {
         chatbotWindow.classList.toggle('open');
@@ -106,6 +113,14 @@ document.addEventListener('DOMContentLoaded', function () {
             addUserMessage(message);
             messageInput.value = '';
             handleCapacityFactorInput(message);
+            return;
+        }
+
+        const navigationOption = findNavigationOption(message);
+        if (navigationOption) {
+            addUserMessage(message);
+            messageInput.value = '';
+            handleDashboardComponentSelection(navigationOption);
             return;
         }
 
@@ -160,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function () {
             button.textContent = option.label;
             button.addEventListener('click', () => {
                 addUserMessage(option.label);
-                addBotMessage(`${option.label}: ${option.value}. ${option.description}`);
+                handleDashboardComponentSelection(option);
 
             });
             list.appendChild(button);
@@ -196,6 +211,82 @@ document.addEventListener('DOMContentLoaded', function () {
         chatbotMessages.appendChild(messageDiv);
         scrollToBottom();
         return messageDiv;
+    }
+
+    function addMetricDefinitionMessage(option) {
+        const safeLabel = escapeHtml(option.label);
+        const safeDefinition = escapeHtml(option.definition || option.description);
+        const safeValue = escapeHtml(option.value);
+
+        addBotRichMessage(
+            `<div class="metric-detail-card">` +
+            `<div class="metric-detail-header">${safeLabel}</div>` +
+            `<div class="metric-detail-row">` +
+            `<span class="metric-detail-label">Definition</span>` +
+            `<p class="metric-detail-text">${safeDefinition}</p>` +
+            `</div>` +
+            `<div class="metric-detail-row metric-detail-value-row">` +
+            `<span class="metric-detail-label">Current value</span>` +
+            `<strong class="metric-detail-value">${safeValue}</strong>` +
+            `</div>` +
+            `</div>`
+        );
+    }
+
+    function handleDashboardComponentSelection(option) {
+        if (option.label === 'Capacity Factor') {
+            addMetricDefinitionMessage(option);
+            addCapacityFactorPrompt();
+            return;
+        }
+
+        if (option.navigationTarget) {
+            navigateToDashboardSection(option.navigationTarget);
+        }
+
+        addMetricDefinitionMessage(option);
+    }
+
+    function findNavigationOption(message) {
+        const normalizedMessage = message.trim().toLowerCase();
+        const matchedAlias = Object.keys(navigationAliases).find((alias) => normalizedMessage.includes(alias));
+
+        if (!matchedAlias) {
+            return null;
+        }
+
+        return metricOptions.find((option) => option.label === navigationAliases[matchedAlias]) ?? null;
+    }
+
+    function navigateToDashboardSection(sectionName) {
+        const target = document.querySelector(`[data-chatbot-section="${sectionName}"]`);
+        if (!target) {
+            return;
+        }
+
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        if (highlightedSectionTimer) {
+            clearTimeout(highlightedSectionTimer);
+            highlightedSectionTimer = null;
+        }
+
+        if (highlightedSection && highlightedSection !== target) {
+            highlightedSection.classList.remove('chatbot-section-active');
+        }
+
+        target.classList.remove('chatbot-section-active');
+        void target.offsetWidth;
+        target.classList.add('chatbot-section-active');
+
+        highlightedSection = target;
+        highlightedSectionTimer = window.setTimeout(() => {
+            target.classList.remove('chatbot-section-active');
+            if (highlightedSection === target) {
+                highlightedSection = null;
+            }
+            highlightedSectionTimer = null;
+        }, 1800);
     }
 
     function addCapacityFactorPrompt() {

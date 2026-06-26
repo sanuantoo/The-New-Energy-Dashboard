@@ -15,7 +15,7 @@ if (!openaiApiKey) {
     console.warn('OPENAI_API_KEY is not set. Chat requests will fail until the environment variable is configured.');
 }
 
-const openai = new OpenAI({ apiKey: openaiApiKey });
+const openai = openaiApiKey ? new OpenAI({ apiKey: openaiApiKey }) : null;
 
 app.use(cors());
 app.use(express.json());
@@ -33,7 +33,7 @@ app.post('/api/chat', async (req, res) => {
         });
     }
 
-    if (!openaiApiKey) {
+    if (!openai) {
         return res.status(503).json({
             reply: 'The assistant is not configured yet. Add OPENAI_API_KEY in .env and restart the server.',
         });

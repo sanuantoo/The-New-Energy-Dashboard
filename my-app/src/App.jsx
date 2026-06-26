@@ -514,7 +514,7 @@ function App() {
             <section className="main-layout">
                 <div className="control-board">
                     <div className="flow-column">
-                        <article className="panel pipeline-panel">
+                        <article className="panel pipeline-panel" data-chatbot-section="energy-flow-diagram">
                             <div className="panel-head energy-flow-head">
                                 <div>
                                     <h3>Energy Flow Diagram</h3>
@@ -642,7 +642,7 @@ function App() {
                     </div>
 
                     <aside className="analytics-rail" aria-label="energy analytics">
-                        <article className="panel analytics-card analytics-card-large">
+                        <article className="panel analytics-card analytics-card-large" data-chatbot-section="supply-vs-demand">
                             <div className="panel-head analytics-head">
                                 <div>
                                     <h3>Supply vs Demand</h3>

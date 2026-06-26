@@ -259,6 +259,45 @@
     transform: scale(0.97);
 }
 
+.metric-detail-card {
+    display: grid;
+    gap: 10px;
+}
+
+.metric-detail-header {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1f2a44;
+}
+
+.metric-detail-row {
+    display: grid;
+    gap: 4px;
+}
+
+.metric-detail-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #6d7a8c;
+}
+
+.metric-detail-text {
+    margin: 0;
+    color: #334155;
+}
+
+.metric-detail-value-row {
+    padding-top: 8px;
+    border-top: 1px solid #d9dfeb;
+}
+
+.metric-detail-value {
+    font-size: 16px;
+    color: #18243d;
+}
+
 @media (max-width: 480px) {
     .chatbot-window {
         width: calc(100vw - 20px);
