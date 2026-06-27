@@ -1,7 +1,11 @@
+/* Apply a consistent box model to all elements so that padding
+   and borders are included in the element's total width and height. */
 * {
   box-sizing: border-box;
 }
 
+/* Define the overall page appearance, including background color,
+   default font, text color, and removal of the browser's default margin. */
 body {
   margin: 0;
   background: #edf3f9;
@@ -9,10 +13,13 @@ body {
   color: #162033;
 }
 
+/* Ensure all buttons inherit the application's default font styling. */
 button {
   font: inherit;
 }
 
+/* Main container for the Energy Dashboard.
+  Provides full-screen height, spacing, and a gradient background. */
 .energy-home {
   min-height: 100vh;
   padding: 24px;
@@ -21,12 +28,15 @@ button {
     linear-gradient(180deg, #f9fbfe 0%, #edf3f9 100%);
 }
 
+/* Set the primary dashboard layout containers to occupy the full width. */
 .dashboard-header,
 .kpi-row,
 .main-layout {
   width: 100%;
 }
 
+/* Arrange dashboard header elements using Flexbox with spacing
+  and allow wrapping on smaller screens. */
 .dashboard-header {
   display: flex;
   justify-content: flex-start;
@@ -36,10 +46,12 @@ button {
   margin-bottom: 20px;
 }
 
+/* Adds spacing around the dashboard brand section. */
 .brand-header {
   padding: 4px 0 2px;
 }
 
+/* Styles the main dashboard logo or brand name. */
 .brand-mark {
   display: inline-flex;
   align-items: baseline;
@@ -51,14 +63,17 @@ button {
   color: #111827;
 }
 
+/* Styles the main part of the brand text. */
 .brand-mark-main {
   color: #111827;
 }
 
+/* Styles the highlighted or accent part of the brand text. */
 .brand-mark-accent {
   color: #111827;
 }
 
+/* Styles the small uppercase heading displayed above the main title. */
 .eyebrow {
   margin: 0 0 8px;
   font-size: 12px;
@@ -68,6 +83,7 @@ button {
   color: #4680ef;
 }
 
+/* Styles the main dashboard heading. */
 .dashboard-header h1 {
   margin: 0;
   font-size: clamp(28px, 3vw, 42px);
@@ -75,6 +91,7 @@ button {
   letter-spacing: -0.03em;
 }
 
+/* Displays additional dashboard information inside a rounded information box. */
 .header-note {
   padding: 12px 16px;
   background: rgba(255, 255, 255, 0.78);
@@ -85,6 +102,7 @@ button {
   font-weight: 600;
 }
 
+/* Creates a responsive grid layout for displaying KPI cards. */
 .kpi-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -92,6 +110,8 @@ button {
   margin-bottom: 20px;
 }
 
+/* Provides shared card styling for KPI cards and dashboard panels,
+   including background, rounded corners, and shadow effects. */
 .kpi-card-2,
 .panel {
   background: rgba(255, 255, 255, 0.92);
@@ -101,6 +121,7 @@ button {
   backdrop-filter: blur(10px);
 }
 
+/* Defines the layout of each KPI card using Flexbox. */
 .kpi-card-2 {
   display: flex;
   align-items: flex-start;
@@ -109,6 +130,7 @@ button {
   padding: 18px;
 }
 
+/* Styles the circular KPI icon displayed inside each KPI card. */
 .kpi-icon {
   width: 42px;
   height: 42px;
@@ -121,12 +143,14 @@ button {
   flex: 0 0 auto;
 }
 
+/* Styles the KPI label text. */
 .kpi-card-2 p {
   margin: 0 0 6px;
   font-size: 13px;
   color: #6b7890;
 }
 
+/* Styles the KPI numeric value. */
 .kpi-card-2 h3 {
   margin: 0;
   font-size: clamp(24px, 2.2vw, 34px);
@@ -134,16 +158,19 @@ button {
   letter-spacing: -0.02em;
 }
 
+/* Styles supplementary KPI information. */
 .kpi-card-2 span {
   color: #7c8798;
   font-size: 12px;
 }
 
+/* Creates the main grid layout for dashboard content. */
 .main-layout {
   display: grid;
   gap: 18px;
 }
 
+/* Splits the dashboard into pipeline and analytics sections. */
 .control-board {
   display: grid;
   grid-template-columns: minmax(430px, 1.22fr) minmax(300px, 0.88fr);
@@ -151,27 +178,34 @@ button {
   align-items: stretch;
 }
 
+/* Organizes the energy flow section vertically. */
 .flow-column {
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   gap: 18px;
 }
 
+/* Applies consistent internal spacing to all dashboard panels. */
 .panel {
   padding: 18px;
 }
 
+/* Enables smooth scrolling and animated highlighting for
+  panels that can be accessed through chatbot navigation. */
 .panel[data-chatbot-section] {
   scroll-margin-top: 24px;
   transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
+/* Highlights the selected dashboard panel when activated
+  by the chatbot or other interactions. */
 .panel.chatbot-section-active {
   border-color: #7aa7ff;
   box-shadow: 0 0 0 3px rgba(76, 126, 245, 0.18), 0 24px 48px rgba(24, 39, 75, 0.14);
   animation: chatbot-section-pulse 1.8s ease;
 }
 
+/* Defines a subtle pulse animation for highlighted panels. */
 @keyframes chatbot-section-pulse {
   0% {
     transform: translateY(0);
@@ -186,12 +220,14 @@ button {
   }
 }
 
+/* Creates the container for the interactive map. */
 .map-panel {
   position: relative;
   min-height: 620px;
   overflow: hidden;
 }
 
+/* Displays an informational hint above the map. */
 .map-hint {
   position: absolute;
   top: 18px;
@@ -206,6 +242,7 @@ button {
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
 }
 
+/* Positions the map control buttons in the top-right corner. */
 .map-controls {
   position: absolute;
   top: 18px;
@@ -215,6 +252,7 @@ button {
   gap: 8px;
 }
 
+/* Styles the individual map control buttons. */
 .map-controls button {
   width: 40px;
   height: 40px;
@@ -226,6 +264,7 @@ button {
   box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
 }
 
+/* Defines the main layout for the energy pipeline section. */
 .pipeline-panel {
   min-height: 0;
   display: grid;
@@ -235,17 +274,20 @@ button {
   height: 100%;
 }
 
+/* Arranges analytics cards vertically. */
 .analytics-rail {
   display: grid;
   gap: 16px;
   align-content: start;
 }
 
+/* Provides a common grid layout for analytics cards. */
 .analytics-card {
   display: grid;
   gap: 16px;
 }
 
+/* Sets predefined heights for analytics cards. */
 .analytics-card-large {
   min-height: 348px;
 }
@@ -276,6 +318,7 @@ button {
   min-height: 250px;
 }
 
+/* Styles shared elements used across SVG charts and analytics graphs. */
 .analytics-head p {
   margin: 0;
   color: #68788e;
@@ -287,18 +330,21 @@ button {
   gap: 12px;
 }
 
+/* Defines the dimensions of line charts. */
 .line-chart {
   width: 100%;
   height: 190px;
   overflow: visible;
 }
 
+/* Styles chart grid lines. */
 .chart-grid-line {
   stroke: #dfe8f3;
   stroke-width: 1;
   stroke-dasharray: 4 6;
 }
 
+/* Styles chart lines for smooth rendering. */
 .chart-line {
   fill: none;
   stroke-width: 3;
@@ -306,10 +352,12 @@ button {
   stroke-linejoin: round;
 }
 
+/* Applies transparency to chart area fills. */
 .chart-area {
   opacity: 0.18;
 }
 
+/* Defines colors for demand, supply, and load charts. */
 .demand-line {
   stroke: #475569;
 }
@@ -331,6 +379,7 @@ button {
   opacity: 0.35;
 }
 
+/* Layout for the load profile chart and its axes. */
 .load-profile-shell {
   gap: 10px;
 }
@@ -353,45 +402,60 @@ button {
   text-align: right;
 }
 
+/* Container for the load profile chart */
 .load-profile-stage {
   min-width: 0;
+  /* Prevents the container from exceeding its parent's width */
 }
 
+/* Main SVG/chart area */
 .load-profile-chart {
   height: 210px;
+  /* Fixed height for the chart */
   overflow: visible;
+  /* Allows labels and tooltips to extend outside the chart */
 }
 
+/* Highlighted band representing the peak load region */
 .load-peak-band {
   fill: rgba(248, 72, 72, 0.14);
+  /* Semi-transparent red fill */
   stroke: rgba(248, 72, 72, 0.42);
+  /* Red outline */
   stroke-width: 1;
   stroke-dasharray: 4 4;
+  /* Creates a dashed border */
 }
 
+/* Label displayed for the peak load value */
 .load-peak-label {
   fill: #ef2d2d;
   font-size: 10px;
   font-weight: 700;
   text-anchor: middle;
+  /* Centers the text horizontally */
 }
 
+/* Dashed line representing the average load */
 .load-average-line {
   stroke: #8e99a9;
   stroke-width: 1.3;
   stroke-dasharray: 5 4;
 }
 
+/* Label for the average load line */
 .load-average-label {
   fill: #677489;
   font-size: 11px;
   font-weight: 700;
 }
 
+/* Makes chart data points clickable/interactive */
 .load-point-group {
   cursor: pointer;
 }
 
+/* Base style for each data point */
 .load-point {
   stroke-width: 1.4;
   transition: transform 160ms ease, r 160ms ease, fill 160ms ease;
@@ -399,38 +463,45 @@ button {
   transform-origin: center;
 }
 
+/* Normal load point styling */
 .load-point.base {
   fill: #22c55e;
   stroke: #22c55e;
 }
 
+/* Peak load point styling */
 .load-point.peak {
   fill: #f24848;
   stroke: #f24848;
 }
 
+/* Enlarges the point when hovered or focused */
 .load-point-group:hover .load-point,
 .load-point-group:focus-within .load-point {
   transform: scale(1.3);
 }
 
+/* Tooltip is hidden by default */
 .load-point-tooltip {
   opacity: 0;
   pointer-events: none;
   transition: opacity 160ms ease;
 }
 
+/* Displays tooltip on hover/focus */
 .load-point-group:hover .load-point-tooltip,
 .load-point-group:focus-within .load-point-tooltip {
   opacity: 1;
 }
 
+/* Tooltip background styling */
 .load-point-tooltip rect {
   fill: rgba(15, 23, 42, 0.94);
   stroke: rgba(148, 163, 184, 0.35);
   stroke-width: 0.8;
 }
 
+/* Tooltip text styling */
 .load-point-tooltip text {
   fill: #f8fafc;
   font-size: 9px;
@@ -438,9 +509,11 @@ button {
   text-anchor: middle;
 }
 
+/* X-axis label container */
 .load-profile-x-axis {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
+  /* Eight evenly spaced labels */
   gap: 6px;
   margin-top: 8px;
   color: #8b97aa;
@@ -448,10 +521,12 @@ button {
   font-weight: 700;
 }
 
+/* Centers each axis label */
 .load-profile-x-axis span {
   text-align: center;
 }
 
+/* Title displayed below the X-axis */
 .load-profile-x-title {
   margin-top: 8px;
   color: #69768a;
@@ -462,38 +537,53 @@ button {
   text-transform: uppercase;
 }
 
+/* ==========================================================
+   SUPPLY & DEMAND BAR CHART
+   Styles for stacked supply bars, demand indicators,
+   and interactive hover effects.
+   ========================================================== */
+
+/* Container for all supply-demand columns */
 .supply-demand-bars {
   display: grid;
   grid-template-columns: repeat(30, minmax(0, 1fr));
+  /* 30 time intervals */
   gap: 4px;
   align-items: end;
+  /* Align bars to the bottom */
   height: 212px;
 }
 
+/* Individual bar column */
 .supply-demand-column {
   display: grid;
   gap: 8px;
   justify-items: center;
   position: relative;
+  /* Allows positioning of tooltips */
 }
 
+/* Raises the bar slightly when hovered */
 .supply-demand-column:hover .supply-demand-bar,
 .supply-demand-column:focus-within .supply-demand-bar {
   transform: translateY(-4px);
   box-shadow: 0 12px 24px rgba(29, 57, 92, 0.14);
 }
 
+/* Wrapper controlling bar dimensions */
 .supply-demand-bar-wrap {
   position: relative;
   width: 100%;
   height: 184px;
 }
 
+/* Main stacked bar */
 .supply-demand-bar {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column-reverse;
+  /* Stacks segments from bottom upward */
   justify-content: flex-start;
   border-radius: 10px 10px 6px 6px;
   overflow: hidden;
@@ -502,18 +592,22 @@ button {
   transition: transform 160ms ease, box-shadow 160ms ease;
 }
 
+/* Generic segment inside each stacked bar */
 .supply-demand-segment {
   width: 100%;
 }
 
+/* Renewable energy section */
 .supply-demand-segment.renewable {
   background: linear-gradient(180deg, #ffd35a, #f5b11d);
 }
 
+/* Grid energy section */
 .supply-demand-segment.grid {
   background: linear-gradient(180deg, #78c6ff, #2f80ed);
 }
 
+/* Horizontal demand indicator line */
 .supply-demand-demand-line {
   position: absolute;
   left: -1px;
@@ -522,12 +616,19 @@ button {
   z-index: 2;
 }
 
+/* Labels beneath each bar */
 .supply-demand-label {
   color: #728197;
   font-size: 10px;
   font-weight: 700;
 }
 
+/* ==========================================================
+   TOOLTIP STYLES
+   Shared hover card used across charts.
+   ========================================================== */
+
+/* Hidden tooltip card */
 .chart-hover-card {
   position: absolute;
   left: 50%;
@@ -550,10 +651,12 @@ button {
   z-index: 5;
 }
 
+/* Tooltip heading */
 .chart-hover-card strong {
   font-size: 12px;
 }
 
+/* Makes tooltip visible when its chart element is hovered */
 .supply-demand-column:hover .chart-hover-card,
 .supply-demand-column:focus-within .chart-hover-card,
 .balance-column:hover .chart-hover-card,
@@ -563,10 +666,16 @@ button {
   transform: translateX(-50%) translateY(0);
 }
 
+/* Slightly wider tooltip for supply-demand chart */
 .supply-demand-tooltip {
   min-width: 156px;
 }
 
+/* ==========================================================
+   AXIS LABELS & LEGEND
+   ========================================================== */
+
+/* Container for chart axis labels */
 .chart-axis-labels {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -578,14 +687,17 @@ button {
   letter-spacing: 0.06em;
 }
 
+/* Hourly chart uses six columns instead of seven */
 .chart-axis-labels.hourly {
   grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
+/* Centers axis labels */
 .chart-axis-labels span {
   text-align: center;
 }
 
+/* Chart legend container */
 .chart-legend {
   display: flex;
   flex-wrap: wrap;
@@ -595,10 +707,12 @@ button {
   font-weight: 700;
 }
 
+/* Left-aligns compact legends */
 .chart-legend.compact {
   justify-content: flex-start;
 }
 
+/* Circular legend marker */
 .legend-dot {
   width: 10px;
   height: 10px;
@@ -608,6 +722,7 @@ button {
   vertical-align: middle;
 }
 
+/* Legend colors */
 .legend-dot.demand-line {
   background: #d9485f;
 }
@@ -641,19 +756,30 @@ button {
   background: #25a0da;
 }
 
+/* ==========================================================
+   CHART SUMMARY SECTION
+   ========================================================== */
+
+/* Grid layout for summary cards */
 .chart-summary-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
+/* Individual summary card */
 .chart-summary-grid div {
   padding: 12px 14px;
+  /* Inner spacing */
   border-radius: 16px;
+  /* Rounded corners */
   border: 1px solid #e2eaf3;
+  /* Light border */
   background: linear-gradient(180deg, #fbfdff, #f4f8fd);
+  /* Soft gradient background */
 }
 
+/* Label inside each summary card */
 .chart-summary-grid span {
   display: block;
   color: #6f7e93;
@@ -663,22 +789,33 @@ button {
   text-transform: uppercase;
 }
 
+/* Main value displayed in the summary card */
 .chart-summary-grid strong {
   display: block;
   margin-top: 8px;
   font-size: 16px;
 }
 
+/* ==========================================================
+   ENERGY BALANCE CHART LAYOUT
+   Creates the main structure for the balance chart,
+   including the Y-axis and chart plotting area.
+   ========================================================== */
+
+/* Main chart container with Y-axis and chart */
 .balance-chart-shell {
   display: grid;
   grid-template-columns: 52px minmax(0, 1fr);
+  /* Fixed Y-axis + flexible chart */
   gap: 10px;
   align-items: stretch;
 }
 
+/* Left-side Y-axis labels */
 .balance-y-axis {
   display: grid;
   align-content: space-between;
+  /* Evenly spaces labels vertically */
   padding: 34px 0 18px;
   color: #728197;
   font-size: 11px;
@@ -686,10 +823,13 @@ button {
   text-align: right;
 }
 
+/* Chart area */
 .balance-chart-stage {
   min-width: 0;
+  /* Prevents overflow */
 }
 
+/* Header containing axis titles */
 .balance-axis-head {
   display: flex;
   justify-content: space-between;
@@ -697,6 +837,7 @@ button {
   margin-bottom: 8px;
 }
 
+/* Shared styling for X and Y axis titles */
 .balance-y-axis-title,
 .balance-x-axis-title {
   color: #5d6f86;
@@ -706,14 +847,23 @@ button {
   text-transform: uppercase;
 }
 
+/* Removes unnecessary spacing below Y-axis title */
 .balance-y-axis-title {
   margin-bottom: 0;
 }
 
+/* Aligns right-side title to the right */
 .balance-y-axis-title-right {
   text-align: right;
 }
 
+/* ==========================================================
+   BALANCE CHART FRAME
+   Holds grid lines, zero line, chart bars,
+   and SVG overlays.
+   ========================================================== */
+
+/* Main plotting frame */
 
 .balance-chart-frame {
   position: relative;
@@ -723,18 +873,22 @@ button {
   overflow: visible;
 }
 
+/* Horizontal background grid */
 .balance-grid-lines {
   position: absolute;
   inset: 0;
   display: grid;
   grid-template-rows: repeat(5, 1fr);
+  /* Five equally spaced rows */
   z-index: 0;
 }
 
+/* Individual dashed grid line */
 .balance-grid-line {
   border-top: 1px dashed #dbe4f0;
 }
 
+/* Horizontal zero reference line */
 .balance-zero-line {
   position: absolute;
   left: 0;
@@ -744,6 +898,7 @@ button {
   z-index: 1;
 }
 
+/* SVG overlay for plotting net energy line */
 .balance-net-overlay {
   position: absolute;
   inset: 0;
@@ -751,28 +906,39 @@ button {
   height: 100%;
   z-index: 4;
   pointer-events: none;
+  /* Prevents mouse interaction */
 }
 
+/* Net energy trend line */
 .balance-net-line {
   fill: none;
   stroke: #3aa66b;
   stroke-width: 0.9;
 }
 
+/* Data points on the net energy line */
 .balance-net-point {
   fill: #3aa66b;
 }
 
+/* ==========================================================
+   BALANCE BAR CHART
+   Displays production and consumption bars.
+   ========================================================== */
+
+/* Grid containing all chart columns */
 .balance-chart {
   position: absolute;
   inset: 0;
   display: grid;
   grid-template-columns: repeat(30, minmax(0, 1fr));
+  /* 30 time intervals */
   gap: clamp(1px, 0.35vw, 5px);
   align-items: stretch;
   z-index: 2;
 }
 
+/* Labels displayed below the chart */
 .balance-axis-labels {
   display: grid;
   grid-template-columns: repeat(30, minmax(0, 1fr));
@@ -784,16 +950,19 @@ button {
   font-weight: 700;
 }
 
+/* Centers each axis label */
 .balance-axis-labels span {
   text-align: center;
 }
 
+/* Single chart column */
 .balance-column {
   position: relative;
   display: block;
   height: 100%;
 }
 
+/* Highlights bars when hovered */
 .balance-column:hover .balance-positive-stack,
 .balance-column:focus-within .balance-positive-stack,
 .balance-column:hover .balance-consumption-bar,
@@ -801,27 +970,33 @@ button {
   filter: brightness(1.05);
 }
 
+/* Wrapper for positive and negative sections */
 .balance-stack-wrap {
   position: relative;
   height: 100%;
 }
 
+/* Positive and negative chart zones */
 .balance-positive-zone,
 .balance-negative-zone {
   position: absolute;
   left: 0;
   right: 0;
   height: calc(50% - 1px);
+  /* Split chart into equal halves */
 }
 
+/* Upper half for energy generation */
 .balance-positive-zone {
   top: 0;
 }
 
+/* Lower half for energy consumption */
 .balance-negative-zone {
   bottom: 0;
 }
 
+/* Stack containing generation sources */
 .balance-positive-stack {
   position: absolute;
   left: 0;
@@ -830,11 +1005,13 @@ button {
   bottom: 0;
   display: flex;
   flex-direction: column-reverse;
+  /* Builds stack from bottom upward */
   border-radius: 2px 2px 0 0;
   overflow: hidden;
   transition: filter 160ms ease;
 }
 
+/* Consumption bar extending downward */
 .balance-consumption-bar {
   position: absolute;
   left: 0;
@@ -845,87 +1022,117 @@ button {
   transition: filter 160ms ease;
 }
 
+/* Generic segment inside a stacked production bar */
 .balance-segment {
   width: 100%;
 }
 
+/* Grid electricity segment */
 .balance-segment.grid {
   background: #2f80ed;
 }
 
+/* Tooltip shown when hovering over balance chart columns */
 .balance-tooltip {
   min-width: 176px;
   bottom: calc(100% - 6px);
 }
 
+/* ==========================================================
+   BALANCE CHART LEGEND
+   Defines colors used in the chart legend.
+   ========================================================== */
+
+/* Consumption legend color */
 .legend-dot.consumption {
   background: #f24848;
 }
 
+/* Renewable trend line legend color */
 .legend-dot.renewable-line {
   background: #3aa66b;
 }
 
+/* Layout for the balance chart legend */
 .balance-legend {
   gap: 8px 12px;
 }
 
+/* ==========================================================
+   MINI DASHBOARD COMPONENTS
+   Used for compact analytics cards.
+   ========================================================== */
+
+/* Compact container alignment */
 .mini-shell {
   align-content: start;
 }
 
+/* List of capacity metrics */
 .capacity-list {
   display: grid;
   gap: 14px;
 }
 
+/* Reduced spacing inside compact cards */
 .analytics-card-compact .capacity-list {
   gap: 10px;
 }
 
+/* Individual capacity row */
 .capacity-row {
   display: grid;
   gap: 8px;
 }
 
+/* Smaller spacing for compact layouts */
 .analytics-card-compact .capacity-row {
   gap: 6px;
 }
 
+/* Container displaying capacity label and value */
 .capacity-meta {
   display: flex;
   justify-content: space-between;
+  /* Places label and value at opposite ends */
   gap: 12px;
   align-items: center;
 }
 
+/* Capacity label */
 .capacity-meta span {
   color: #5d6f86;
   font-size: 13px;
   font-weight: 700;
 }
 
+/* Capacity value */
 .capacity-meta strong {
   font-size: 13px;
 }
 
+/* Smaller text for compact analytics cards */
 .analytics-card-compact .capacity-meta span,
 .analytics-card-compact .capacity-meta strong {
   font-size: 12px;
 }
 
+/* Background track for capacity progress bar */
 .capacity-bar-track {
   width: 100%;
   height: 12px;
   border-radius: 999px;
+  /* Fully rounded edges */
   background: #edf3fa;
   overflow: hidden;
 }
 
+/* Slightly thinner progress bar in compact layout */
 .analytics-card-compact .capacity-bar-track {
   height: 10px;
 }
 
+/* Filled portion of the capacity bar */
 .capacity-bar {
   display: block;
   height: 100%;
@@ -933,40 +1140,54 @@ button {
   border-radius: inherit;
 }
 
+/* Solar energy capacity */
 .capacity-bar.solar {
   background: linear-gradient(90deg, #ffd35a, #f5b11d);
 }
 
+/* Wind energy capacity */
 .capacity-bar.wind {
   background: linear-gradient(90deg, #9ddd7b, #6cbf52);
 }
 
+/* Battery storage capacity */
 .capacity-bar.battery {
   background: linear-gradient(90deg, #6ed8a0, #36a269);
 }
 
+/* Biomass capacity */
 .capacity-bar.biomass {
   background: linear-gradient(90deg, #b89b75, #8a6b3f);
 }
 
+/* Geothermal capacity */
 .capacity-bar.geothermal {
   background: linear-gradient(90deg, #f58a69, #d5613c);
 }
 
+/* Hydropower capacity */
 .capacity-bar.hydropower {
   background: linear-gradient(90deg, #6fcdf3, #25a0da);
 }
 
+/* ==========================================================
+   COST BREAKDOWN
+   Displays different cost categories using progress bars.
+   ========================================================== */
+
+/* Container for all cost items */
 .cost-list {
   display: grid;
   gap: 12px;
 }
 
+/* Individual cost row */
 .cost-row {
   display: grid;
   gap: 6px;
 }
 
+/* Label and value container */
 .cost-meta {
   display: flex;
   justify-content: space-between;
@@ -974,16 +1195,19 @@ button {
   align-items: center;
 }
 
+/* Cost label */
 .cost-meta span {
   color: #5d6f86;
   font-size: 12px;
   font-weight: 700;
 }
 
+/* Cost value */
 .cost-meta strong {
   font-size: 12px;
 }
 
+/* Background track for cost progress bars */
 .cost-bar-track {
   width: 100%;
   height: 10px;
@@ -992,24 +1216,29 @@ button {
   overflow: hidden;
 }
 
+/* Filled portion of the cost bar */
 .cost-bar {
   display: block;
   height: 100%;
   border-radius: inherit;
 }
 
+/* Base operating cost */
 .cost-bar.base {
   background: linear-gradient(90deg, #9cb3d6, #6f88ae);
 }
 
+/* Capital expenditure (CAPEX) */
 .cost-bar.capex {
   background: linear-gradient(90deg, #f8b559, #eb8c1d);
 }
 
+/* Cost savings */
 .cost-bar.savings {
   background: linear-gradient(90deg, #67d68e, #2db84d);
 }
 
+/* Total cost row */
 .cost-total-row {
   display: flex;
   justify-content: space-between;
@@ -1022,10 +1251,17 @@ button {
   font-weight: 700;
 }
 
+/* Highlights the total value */
 .cost-total-row strong {
   color: #162033;
 }
 
+/* ==========================================================
+   PANEL HEADER
+   Shared header layout for dashboard panels.
+   ========================================================== */
+
+/* Panel title container */
 .panel-head {
   display: flex;
   justify-content: space-between;
@@ -1033,17 +1269,20 @@ button {
   gap: 12px;
 }
 
+/* Main panel heading */
 .panel-head h3 {
   margin: 0 0 6px;
   font-size: 20px;
 }
 
+/* Subtitle below the energy flow heading */
 .energy-flow-head p {
   margin: 0;
   color: #68788e;
   font-size: 14px;
 }
 
+/* Right-side toolbar */
 .flow-head-actions {
   display: flex;
   gap: 10px;
@@ -1052,6 +1291,7 @@ button {
   justify-content: flex-end;
 }
 
+/* Time period selection badge */
 .flow-period {
   padding: 8px 12px;
   background: #f2f7fd;
@@ -1062,11 +1302,18 @@ button {
   font-weight: 700;
 }
 
+/* ==========================================================
+   ENERGY FLOW DIAGRAM
+   Layout for the network visualization showing energy flow.
+   ========================================================== */
+
+/* Toolbar above the diagram */
 .diagram-toolbar {
   display: grid;
   gap: 12px;
 }
 
+/* Exportable diagram container */
 .diagram-export-surface {
   display: grid;
   grid-template-rows: minmax(0, 1fr);
@@ -1078,6 +1325,7 @@ button {
   height: 100%;
 }
 
+/* Main canvas for flow nodes and connecting lines */
 .node-link-board {
   position: relative;
   min-height: 720px;
@@ -1086,16 +1334,20 @@ button {
   padding: 24px 20px 74px;
   border-radius: 24px;
   border: 1px solid #dbe5f1;
+
+  /* Decorative radial and linear background */
   background:
     radial-gradient(circle at 50% 50%, rgba(111, 168, 255, 0.1), transparent 22%),
     linear-gradient(180deg, #ffffff, #f6f9fd);
   overflow: hidden;
 }
 
+/* Removes top margin for inline summary chips */
 .pipeline-summary-chips-inline {
   margin-top: 0;
 }
 
+/* SVG container for connection lines */
 .flow-network-lines {
   position: absolute;
   inset: 0;
@@ -1104,6 +1356,7 @@ button {
   z-index: 1;
 }
 
+/* Base style for animated energy flow lines */
 .flow-line-svg {
   fill: none;
   stroke-width: 4;
@@ -1114,6 +1367,7 @@ button {
   animation: flowPulse 6s linear infinite;
 }
 
+/* Line colors representing different energy sources */
 .flow-line-svg.grid {
   stroke: #7083a3;
 }
@@ -1150,6 +1404,7 @@ button {
   stroke: #586a89;
 }
 
+/* Labels displayed on flow diagram and summary chips */
 .flow-label,
 .pipeline-summary-chips span {
   color: #66768d;
@@ -1159,6 +1414,13 @@ button {
   text-transform: uppercase;
 }
 
+/* ==========================================================
+   FLOW NODES
+   Represents generation, storage, and consumption nodes
+   within the energy flow diagram.
+   ========================================================== */
+
+/* Generic flow node card */
 .flow-node-card {
   position: absolute;
   width: clamp(150px, 15vw, 184px);
@@ -1170,44 +1432,57 @@ button {
   cursor: default;
 }
 
+/* Positions source nodes vertically centered */
 .flow-node-card.flow-source-node {
   transform: translateY(-50%);
 }
 
+/* Container for the node title and description */
 .flow-node-copy {
   display: grid;
   gap: 3px;
   min-width: 0;
 }
 
+/* Slightly tightens letter spacing for node headings */
 .flow-node-copy strong,
 .hub-subnode strong {
   letter-spacing: -0.01em;
 }
 
+/* Circular icon representing the energy source */
 .flow-node-icon {
   width: 44px;
   height: 44px;
   flex: 0 0 44px;
+  /* Prevents resizing */
   border-radius: 999px;
   display: grid;
   place-items: center;
+  /* Centers the icon */
   font-size: 20px;
   font-weight: 700;
   border: 2px solid currentColor;
   background: #fff;
 }
 
+/* Main node title */
 .flow-node-card strong {
   font-size: clamp(16px, 1.1vw, 18px);
   line-height: 1.15;
 }
 
+/* Description beneath the node title */
 .flow-node-card small {
   color: #5f7085;
   font-size: 11px;
   line-height: 1.35;
 }
+
+/* ==========================================================
+   NODE COLOR THEMES
+   Assigns a unique color to each energy source.
+   ========================================================== */
 
 .flow-node-card.grid {
   color: #5f7085;
@@ -1237,6 +1512,13 @@ button {
   color: #25a0da;
 }
 
+/* ==========================================================
+   CENTRAL ENERGY HUB
+   Represents the central distribution node that connects
+   generation sources with consumers.
+   ========================================================== */
+
+/* Main hub card */
 .flow-node-card.hub {
   top: 53%;
   left: 50%;
@@ -1254,6 +1536,7 @@ button {
   box-shadow: 0 24px 44px rgba(115, 84, 201, 0.16);
 }
 
+/* Container holding hub sub-components */
 .hub-subnodes {
   display: grid;
   gap: 8px;
@@ -1261,6 +1544,7 @@ button {
   margin-top: 10px;
 }
 
+/* Individual hub subnode */
 .hub-subnode {
   position: relative;
   padding: 8px 10px;
@@ -1270,6 +1554,7 @@ button {
   text-align: left;
 }
 
+/* Subnode category label */
 .hub-subnode span {
   display: block;
   color: #6f59b9;
@@ -1279,12 +1564,14 @@ button {
   text-transform: uppercase;
 }
 
+/* Subnode title */
 .hub-subnode strong {
   display: block;
   margin-top: 3px;
   font-size: 12px;
 }
 
+/* Subnode description */
 .hub-subnode small {
   display: block;
   margin-top: 2px;
@@ -1292,34 +1579,51 @@ button {
   color: #735eb7;
 }
 
+/* Hub-specific label colors */
 .flow-node-card.hub .flow-label,
 .flow-node-card.hub small {
   color: #7a62b7;
 }
 
+/* Hub icon styling */
 .flow-node-card.hub .flow-node-icon {
   margin: 0 auto 6px;
   color: #7d58dc;
   background: rgba(255, 255, 255, 0.9);
 }
 
+/* ==========================================================
+   CONSUMER NODES
+   Represents commercial and residential consumers.
+   ========================================================== */
+
+/* Commercial consumer node */
 .flow-node-card.commercial {
   top: 13%;
   right: 2.5%;
   color: #ef5a51;
 }
 
+/* Residential consumer node */
 .flow-node-card.residential {
   bottom: 13%;
   right: 2.5%;
   color: #ef5a51;
 }
 
+/* ==========================================================
+   FLOW LINK LABELS
+   Displays information about energy transferred
+   between connected nodes.
+   ========================================================== */
+
+/* Container for each flow badge */
 .flow-link-path {
   position: absolute;
   z-index: 1;
 }
 
+/* Positions of flow badges */
 .flow-link-path.grid-to-hub {
   top: 18%;
   left: 24%;
@@ -1345,6 +1649,7 @@ button {
   right: 17%;
 }
 
+/* Information badge shown along a connection */
 .flow-link-badge {
   min-width: 98px;
   padding: 8px 9px;
@@ -1355,6 +1660,7 @@ button {
   text-align: center;
 }
 
+/* Border colors match the corresponding energy source */
 .flow-link-path.grid-to-hub .flow-link-badge {
   border-color: rgba(112, 131, 163, 0.32);
 }
@@ -1388,12 +1694,14 @@ button {
   border-color: rgba(88, 106, 137, 0.32);
 }
 
+/* Energy amount shown inside the badge */
 .flow-link-badge strong {
   display: block;
   font-size: 13px;
   line-height: 1.3;
 }
 
+/* Supporting label below the value */
 .flow-link-badge span {
   display: block;
   margin-top: 2px;
@@ -1401,6 +1709,13 @@ button {
   font-size: 11px;
 }
 
+/* ==========================================================
+   FLOW TOOLTIPS
+   Displays detailed information when hovering
+   over nodes or hub subcomponents.
+   ========================================================== */
+
+/* Hidden tooltip */
 .flow-tooltip {
   position: absolute;
   left: calc(100% + 12px);
@@ -1417,18 +1732,21 @@ button {
   transition: opacity 160ms ease, transform 160ms ease;
 }
 
+/* Displays tooltip when hovering over a node */
 .flow-node-card:hover .flow-tooltip,
 .hub-subnode:hover .flow-tooltip {
   opacity: 1;
   transform: translateY(-50%) translateX(0);
 }
 
+/* Tooltip heading */
 .flow-tooltip strong {
   display: block;
   margin-bottom: 8px;
   font-size: 13px;
 }
 
+/* Tooltip content layout */
 .flow-tooltip-lines {
   display: grid;
   gap: 4px;
@@ -1436,18 +1754,27 @@ button {
   line-height: 1.4;
 }
 
+/* Tooltip positioned to the left of subnodes */
 .flow-tooltip-subnode {
   left: auto;
   right: calc(100% + 10px);
   width: 200px;
 }
 
+/* Tooltips for consumer nodes appear on the opposite side */
 .flow-node-card.commercial .flow-tooltip,
 .flow-node-card.residential .flow-tooltip {
   left: auto;
   right: calc(100% + 12px);
 }
 
+/* ==========================================================
+   FLOW LEGEND
+   Displays color references for all energy sources
+   and consumer types.
+   ========================================================== */
+
+/* Legend container */
 .flow-legend {
   position: absolute;
   left: 20px;
@@ -1459,9 +1786,12 @@ button {
   align-items: center;
   padding: 8px 4px 0;
   z-index: 2;
+
+  /* Gradient background improves readability */
   background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(246, 249, 253, 0.92) 34%, rgba(246, 249, 253, 0.98) 100%);
 }
 
+/* Individual legend entry */
 .flow-legend-item {
   display: flex;
   gap: 8px;
@@ -1471,6 +1801,7 @@ button {
   font-weight: 600;
 }
 
+/* Colored square representing an energy source */
 .flow-legend-swatch {
   width: 12px;
   height: 12px;
@@ -1478,6 +1809,7 @@ button {
   display: inline-block;
 }
 
+/* Legend colors */
 .flow-legend-swatch.grid {
   background: #7083a3;
 }
@@ -1515,6 +1847,12 @@ button {
   background: #ef5a51;
 }
 
+/* ==========================================================
+   FLOW ANIMATION
+   Creates a moving dashed-line effect to represent
+   energy flowing through the network.
+   ========================================================== */
+
 @keyframes flowPulse {
   from {
     stroke-dashoffset: 0;
@@ -1525,12 +1863,14 @@ button {
   }
 }
 
+/* Creates a 4-column responsive grid for the pipeline summary cards */
 .pipeline-summary-chips {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
+/* Styles each summary chip/card */
 .chip {
   padding: 16px;
   background: #f8fbff;
@@ -1538,6 +1878,7 @@ button {
   border-radius: 16px;
 }
 
+/* Styles the main value inside each chip */
 .chip strong {
   display: block;
   margin-top: 8px;
@@ -1545,15 +1886,18 @@ button {
   line-height: 1.35;
 }
 
+/* Makes the breakdown chip occupy one grid column */
 .chip-breakdown {
   grid-column: span 1;
 }
 
+/* Container for the map section using grid layout */
 .map-section {
   display: grid;
   gap: 14px;
 }
 
+/* Header section of the map with title and action button */
 .map-section-head {
   display: flex;
   justify-content: space-between;
@@ -1561,21 +1905,25 @@ button {
   align-items: end;
 }
 
+/* Map section heading style */
 .map-section-head h3 {
   margin: 0 0 6px;
   font-size: 20px;
 }
 
+/* Subtitle/description below the map heading */
 .map-section-head p {
   margin: 0;
   color: #68788e;
   font-size: 14px;
 }
 
+/* Sets a minimum width for the map toggle button */
 .map-toggle-btn {
   min-width: 120px;
 }
 
+/* Styling shown when the map is collapsed */
 .map-collapsed-state {
   padding: 20px;
   border-radius: 20px;
@@ -1584,6 +1932,7 @@ button {
   color: #60728a;
 }
 
+/* Base styling for secondary buttons */
 .secondary-btn {
   border: 1px solid transparent;
   border-radius: 999px;
@@ -1591,12 +1940,14 @@ button {
   cursor: pointer;
 }
 
+/* Visual appearance of secondary buttons */
 .secondary-btn {
   background: #f7faff;
   border-color: #dbe5f0;
   color: #40536f;
 }
 
+/* Defines the OpenLayers map container size */
 .ol-map {
   width: 100%;
   height: 580px;
@@ -1604,36 +1955,47 @@ button {
   overflow: hidden;
 }
 
+/* ---------- Responsive styles for screens below 1400px ---------- */
 @media (max-width: 1400px) {
+
+  /* Reduce KPI cards to two columns */
   .kpi-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
 }
 
+/* ---------- Responsive styles for tablets (below 860px) ---------- */
 @media (max-width: 860px) {
+
+  /* Stack control board into a single column */
   .control-board {
     grid-template-columns: 1fr;
   }
 
+  /* Allow panels to adjust height automatically */
   .pipeline-panel,
   .map-panel {
     min-height: auto;
   }
 
+  /* Increase flow diagram height for better spacing */
   .node-link-board {
     min-height: 920px;
   }
 
+  /* Reduce node card width */
   .flow-node-card {
     width: 160px;
   }
 
+  /* Resize hub node */
   .flow-node-card.hub {
     width: 210px;
     min-height: 320px;
   }
 
+  /* Reposition connecting flow lines */
   .flow-link-path.grid-to-hub {
     top: 20%;
     left: 22%;
@@ -1659,26 +2021,33 @@ button {
     right: 14%;
   }
 
+  /* Stack analytics sections vertically */
   .analytics-mini-grid,
   .chart-summary-grid {
     grid-template-columns: 1fr;
   }
 
+  /* Reduce spacing between supply-demand bars */
   .supply-demand-bars {
     gap: 3px;
   }
 
+  /* Align section headers to the top */
   .map-section-head,
   .flow-head-actions {
     align-items: start;
   }
 }
 
+/* ---------- Mobile layout (below 760px) ---------- */
 @media (max-width: 760px) {
+
+  /* Reduce page padding */
   .energy-home {
     padding: 12px;
   }
 
+  /* Stack all grid sections into a single column */
   .kpi-row,
   .pipeline-summary-chips,
   .analytics-mini-grid,
@@ -1686,6 +2055,7 @@ button {
     grid-template-columns: 1fr;
   }
 
+  /* Make charts fit smaller screens */
   .balance-chart-shell {
     grid-template-columns: 40px minmax(0, 1fr);
     gap: 8px;
@@ -1700,6 +2070,7 @@ button {
     font-size: 9px;
   }
 
+  /* Convert flow diagram into a stacked layout */
   .node-link-board {
     min-height: auto;
     display: grid;
@@ -1707,10 +2078,12 @@ button {
     padding: 14px;
   }
 
+  /* Hide decorative flow lines */
   .flow-network-lines {
     display: none;
   }
 
+  /* Remove absolute positioning for mobile */
   .flow-node-card,
   .flow-link-path {
     position: static;
@@ -1729,11 +2102,13 @@ button {
     transform: none;
   }
 
+  /* Display flow links vertically */
   .flow-link-path {
     display: grid;
     justify-items: start;
   }
 
+  /* Make tooltips always visible and flow naturally */
   .flow-tooltip,
   .flow-tooltip-subnode {
     position: static;
@@ -1744,6 +2119,7 @@ button {
     margin-top: 8px;
   }
 
+  /* Stack action buttons and legend */
   .flow-head-actions,
   .flow-legend {
     flex-direction: column;
@@ -1756,38 +2132,46 @@ button {
     padding-top: 0;
   }
 
+  /* Improve chart label readability */
   .chart-axis-labels {
     gap: 4px;
     font-size: 10px;
   }
 
+  /* Reduce displayed columns for compact charts */
   .supply-demand-bars {
     grid-template-columns: repeat(15, minmax(0, 1fr));
     height: auto;
   }
 
+  /* Hide every alternate supply-demand column */
   .supply-demand-column:nth-child(2n) {
     display: none;
   }
 
+  /* Reduce line chart height */
   .line-chart {
     height: 170px;
   }
 
+  /* Allow badges to shrink */
   .flow-link-badge {
     min-width: 0;
   }
 
+  /* Reduce heading sizes */
   .kpi-card-2 h3,
   .flow-node-card strong {
     font-size: 24px;
   }
 
+  /* Stack map header vertically */
   .map-section-head {
     flex-direction: column;
     align-items: stretch;
   }
 
+  /* Reduce map height on mobile */
   .ol-map {
     height: 420px;
   }

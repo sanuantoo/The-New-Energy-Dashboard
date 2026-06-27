@@ -1,8 +1,45 @@
-# Energy System Monitor
+# Energy System Monitor Dashboard
 
-This project uses a Vite React frontend plus a small Express backend for the chatbot. The browser sends requests to `/api/chat`, and the backend calls Google Gemini with a server-side API key.
+A React + Vite dashboard for monitoring an energy system, visualizing generation and demand, and using an in-browser chatbot.
 
-## Setup
+## Highlights
+
+- Interactive dashboard with KPIs, charts, and flow views
+- OpenLayers map integration for geographic context
+- Chat assistant panel running entirely in the browser
+- Local export features for dashboard views
+
+## Tech Stack
+
+- Frontend: React, Vite
+- Mapping: OpenLayers
+- Tooling: ESLint
+
+## Project Structure
+
+```text
+my-app/
+  src/
+    app/
+      App.jsx
+      App.css
+    components/
+      maps/
+        OpenLayersMap.jsx
+    data/
+      dashboardMetrics.js
+    features/
+      chatbot/
+        chatbot.js
+        chatbot.css
+    styles/
+      index.css
+    main.jsx
+  vite.config.js
+  package.json
+```
+
+## Getting Started
 
 1. Install dependencies:
 
@@ -10,42 +47,34 @@ This project uses a Vite React frontend plus a small Express backend for the cha
 npm install
 ```
 
-2. Create a `.env` file in the project root:
-
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-1.5-flash
-CHATBOT_SYSTEM_PROMPT=You are Energy Bug, a concise and helpful assistant for energy system monitoring.
-PORT=3001
-```
-
-3. Start the frontend and backend together:
+2. Start the app:
 
 ```bash
 npm run dev
 ```
 
-The Vite dev server proxies `/api/*` requests to the Express server on port `3001`.
+The app runs fully on the frontend with Vite.
 
-## Chatbot API
+## Environment Configuration
 
-The backend endpoint accepts:
+No environment variables are required for the default frontend-only mode.
 
-```json
-{
-  "message": "How much power is being used right now?"
-}
-```
+## Available Scripts
 
-And responds with:
+- `npm run dev` - Run Vite frontend
+- `npm run build` - Build production frontend bundle
+- `npm run preview` - Preview production build locally
+- `npm run lint` - Run ESLint
 
-```json
-{
-  "reply": "...assistant response..."
-}
-```
+## Chatbot Behavior
 
-## Security
+The chatbot works without external APIs and provides:
 
-- Keep `GEMINI_API_KEY` only in `.env` on the server.
-- Do not expose the Gemini key in frontend code or client-side Vite env variables.
+- Local guidance based on dashboard metrics
+- Capacity factor explanation and calculator flow
+- Quick navigation to key dashboard sections
+
+## Troubleshooting
+
+- If chat feels unresponsive, refresh the page to reset the local chat session.
+- If the map is blank, verify your network access for map tile loading.

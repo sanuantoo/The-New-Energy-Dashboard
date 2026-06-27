@@ -1,10 +1,13 @@
+/* Reset default browser spacing and ensure consistent box sizing
+   across all HTML elements. */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Chatbot Icon */
+/* Styles the floating chatbot launcher button that remains fixed
+   at the bottom-right corner of the screen. */
 .chatbot-icon {
     position: fixed;
     bottom: 20px;
@@ -24,34 +27,38 @@
     gap: 2px;
 }
 
+/* Adds hover animation and shadow effect to improve user interaction. */
 .chatbot-icon:hover {
     transform: scale(1.1);
     box-shadow: 0 6px 16px rgba(102, 126, 234, 0.6);
 }
 
+/* Sets the size of the chatbot icon SVG. */
 .chatbot-icon svg {
     width: 28px;
     height: 28px;
 }
 
+/* Hides the chatbot label while keeping it available if needed later. */
 .chatbot-icon-label {
     display: none;
 }
 
-/* Header with avatar */
+/* Aligns the chatbot avatar and title horizontally in the header. */
 .chatbot-header-info {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
+/* Defines the size of the chatbot avatar image. */
 .chatbot-header-avatar {
     width: 32px;
     height: 32px;
     flex-shrink: 0;
 }
 
-/* Chatbot Window */
+/* Styles the chatbot window and controls its opening/closing animation. */
 .chatbot-window {
     position: fixed;
     bottom: 90px;
@@ -71,12 +78,14 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
+/* Makes the chatbot visible when the "open" class is applied. */
 .chatbot-window.open {
     opacity: 1;
     transform: translateY(0) scale(1);
     pointer-events: auto;
 }
 
+/* Styles the chatbot header, including background, text color, padding, and layout. */
 .chatbot-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -87,11 +96,13 @@
     align-items: center;
 }
 
+/* Sets the chatbot title font size and weight. */
 .chatbot-header h2 {
     font-size: 18px;
     font-weight: 600;
 }
 
+/* Styles the chatbot close button. */
 .close-btn {
     background: none;
     border: none;
@@ -106,10 +117,12 @@
     transition: transform 0.2s ease;
 }
 
+/* Rotates the close button slightly when hovered. */
 .close-btn:hover {
     transform: rotate(90deg);
 }
 
+/* Scrollable message container for chat history panel. */
 .chatbot-messages {
     flex: 1;
     overflow-y: auto;
@@ -119,12 +132,14 @@
     gap: 12px;
 }
 
+/* Defines the layout for each individual chat message. */
 .message {
     display: flex;
     gap: 8px;
     animation: slideIn 0.3s ease;
 }
 
+/* Slide-in animation used when new messages appear. */
 @keyframes slideIn {
     from {
         opacity: 0;
@@ -137,14 +152,17 @@
     }
 }
 
+/* Aligns chatbot messages to the left. */
 .message.bot {
     justify-content: flex-start;
 }
 
+/* Aligns user messages to the right. */
 .message.user {
     justify-content: flex-end;
 }
 
+/* Provides common styling for all chat message bubbles. */
 .message-content {
     max-width: 70%;
     padding: 12px 16px;
@@ -154,18 +172,21 @@
     line-height: 1.4;
 }
 
+/* Styles chatbot message bubbles. */
 .message.bot .message-content {
     background: #f0f0f0;
     color: #333;
     border-bottom-left-radius: 4px;
 }
 
+/* Styles user message bubbles with a gradient background. */
 .message.user .message-content {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border-bottom-right-radius: 4px;
 }
 
+/* Styles the chatbot footer, including input controls and send button. */
 .chatbot-footer {
     border-top: 1px solid #e0e0e0;
     padding: 15px;
@@ -173,6 +194,7 @@
     gap: 10px;
 }
 
+/* Styles the text input field used for typing messages. */
 .message-input {
     flex: 1;
     border: 1px solid #e0e0e0;
@@ -184,10 +206,12 @@
     transition: border-color 0.3s ease;
 }
 
+/* Highlights the input field when it receives focus. */
 .message-input:focus {
     border-color: #667eea;
 }
 
+/* Styles the circular send button. */
 .send-btn {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -203,15 +227,17 @@
     flex-shrink: 0;
 }
 
+/* Slightly enlarges the send button on hover. */
 .send-btn:hover {
     transform: scale(1.05);
 }
 
+/* Creates a button press animation when clicked. */
 .send-btn:active {
     transform: scale(0.95);
 }
 
-/* Scrollbar Styling */
+/* Customizes the appearance of the chat message scrollbar. */
 .chatbot-messages::-webkit-scrollbar {
     width: 6px;
 }
@@ -229,7 +255,7 @@
     background: #999;
 }
 
-/* Bot List Buttons */
+/* Styles the list of quick action buttons displayed by the chatbot. */
 .bot-list {
     display: flex;
     flex-direction: column;
@@ -237,6 +263,7 @@
     margin-top: 10px;
 }
 
+/* Styles each quick action button. */
 .bot-list-btn {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -250,31 +277,37 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* Adds hover animation to quick action buttons. */
 .bot-list-btn:hover {
     transform: scale(1.03);
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
 }
 
+/* Creates a click animation for quick action buttons. */
 .bot-list-btn:active {
     transform: scale(0.97);
 }
 
+/* Styles the metric information card shown inside chatbot responses. */
 .metric-detail-card {
     display: grid;
     gap: 10px;
 }
 
+/* Styles the metric title. */
 .metric-detail-header {
     font-size: 15px;
     font-weight: 700;
     color: #1f2a44;
 }
 
+/* Arranges each metric detail section vertically. */
 .metric-detail-row {
     display: grid;
     gap: 4px;
 }
 
+/* Styles the metric labels. */
 .metric-detail-label {
     font-size: 11px;
     font-weight: 700;
@@ -283,21 +316,25 @@
     color: #6d7a8c;
 }
 
+/* Styles the descriptive metric text. */
 .metric-detail-text {
     margin: 0;
     color: #334155;
 }
 
+/* Separates the metric value from the description. */
 .metric-detail-value-row {
     padding-top: 8px;
     border-top: 1px solid #d9dfeb;
 }
 
+/* Highlights the metric value. */
 .metric-detail-value {
     font-size: 16px;
     color: #18243d;
 }
 
+/* Responsive fallback sizing for narrow mobile screens. */
 @media (max-width: 480px) {
     .chatbot-window {
         width: calc(100vw - 20px);

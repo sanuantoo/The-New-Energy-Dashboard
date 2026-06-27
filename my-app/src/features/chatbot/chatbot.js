@@ -1,6 +1,7 @@
-import { defaultResources, getChatbotMetricOptions } from '../dashboardMetrics.js';
+import { defaultResources, getChatbotMetricOptions } from '../../data/dashboardMetrics.js';
 
 document.addEventListener('DOMContentLoaded', function () {
+    /* HTML structure for chatbot UI injected dynamically into the page */
     const chatbotHTML = `
         <div class="chatbot-icon" id="chatbotIcon" aria-label="Open Energy Bug chat">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -46,9 +47,10 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         </div>
     `;
-
+    /* Inject chatbot UI into the DOM */
     document.body.insertAdjacentHTML('beforeend', chatbotHTML);
 
+    // Cache DOM references once to keep all handlers fast and readable.
     const chatbotIcon = document.getElementById('chatbotIcon');
     const chatbotWindow = document.getElementById('chatbotWindow');
     const closeBtn = document.getElementById('closeBtn');
@@ -61,13 +63,14 @@ document.addEventListener('DOMContentLoaded', function () {
         'supply vs demand': 'Supply vs Demand',
         'supply and demand': 'Supply vs Demand',
     };
+    /* Chat state tracking variables */
+    let chatStarted = false;// Tracks whether chat session has started
+    let isSending = false;// Prevents duplicate message sending
+    let capacityFactorFlow = null; // Stores flow state for analytics interactions
+    let highlightedSection = null;// Tracks currently highlighted dashboard section
+    let highlightedSectionTimer = null;// Timer for removing highlights
 
-    let chatStarted = false;
-    let isSending = false;
-    let capacityFactorFlow = null;
-    let highlightedSection = null;
-    let highlightedSectionTimer = null;
-
+    // Opens/closes the chat panel and resets conversational state on open.
     chatbotIcon.addEventListener('click', () => {
         chatbotWindow.classList.toggle('open');
 
@@ -80,11 +83,12 @@ document.addEventListener('DOMContentLoaded', function () {
             chatStarted = true;
         }
     });
-
+    /* Close chatbot window when close button is clicked */
     closeBtn.addEventListener('click', () => {
         chatbotWindow.classList.remove('open');
     });
 
+    // Wire submit actions for button click and Enter key.
     sendBtn.addEventListener('click', sendMessage);
 
     messageInput.addEventListener('keypress', (e) => {
@@ -93,11 +97,13 @@ document.addEventListener('DOMContentLoaded', function () {
             sendMessage();
         }
     });
-
+    /* Handles sending and processing of user messages in the chatbot */
     async function sendMessage() {
+        // Guard against empty submissions and concurrent requests.
         const message = messageInput.value.trim();
         if (message === '' || isSending) return;
 
+        // Special command to close and reset the chat.
         if (message.toLowerCase() === 'exit') {
             addUserMessage(message);
             messageInput.value = '';
@@ -109,6 +115,9 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        /* ----------------------------------------
+             CAPACITY FACTOR INTERACTIVE FLOW MODE
+          -----------------------------------------*/
         if (capacityFactorFlow && capacityFactorFlow.active) {
             addUserMessage(message);
             messageInput.value = '';
@@ -116,6 +125,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        // Allow natural language shortcuts to jump to dashboard sections.
         const navigationOption = findNavigationOption(message);
         if (navigationOption) {
             addUserMessage(message);
@@ -128,35 +138,48 @@ document.addEventListener('DOMContentLoaded', function () {
         messageInput.value = '';
         setInputState(true);
 
-        const thinkingMessage = addBotMessage('Thinking...');
-
-        try {
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ message })
-            });
-
-            const data = await response.json();
-
-            thinkingMessage.remove();
-
-            if (!response.ok) {
-                addBotMessage(data.reply || 'The assistant is temporarily unavailable.');
-                return;
-            }
-
-            addBotMessage(data.reply || 'No response received.');
-        } catch {
-            thinkingMessage.remove();
-            addBotMessage('There was a problem reaching the assistant.');
-        } finally {
+        const localReply = generateLocalResponse(message);
+        // Simulate delay for realistic chatbot behavior
+        setTimeout(() => {
+            addBotMessage(localReply);
             setInputState(false);
-        }
+        }, 350);
     }
 
+    /* ---------------------------------------------------
+       GENERATES LOCAL RULE-BASED RESPONSE 
+      ----------------------------------------------------*/
+    function generateLocalResponse(message) {
+        const normalizedMessage = message.trim().toLowerCase();
+
+        if (normalizedMessage.includes('hello') || normalizedMessage.includes('hi')) {
+            return 'Hi! I can help explain dashboard metrics and guide you to sections. Pick a component from the list, or ask about demand, renewable generation, grid import, cost, or capacity factor.';
+        }
+
+        if (normalizedMessage.includes('help')) {
+            return ' I can explain dashboard metrics, help with capacity factor calculations, and navigate to key dashboard sections.';
+        }
+
+        if (normalizedMessage.includes('capacity factor')) {
+            const capacityFactorOption = metricOptions.find((option) => option.label === 'Capacity Factor');
+            if (capacityFactorOption) {
+                handleDashboardComponentSelection(capacityFactorOption);
+                return 'Opened the Capacity Factor details. You can continue with the calculator prompts above.';
+            }
+        }
+
+        const directMatch = metricOptions.find((option) => normalizedMessage.includes(option.label.toLowerCase()));
+        if (directMatch) {
+            handleDashboardComponentSelection(directMatch);
+            return `Showing details for ${directMatch.label}.`;
+        }
+
+        return ' Please ask about available dashboard components, demand, renewable generation, cost, or capacity factor, and I will assist using local project data.';
+    }
+
+    /* ---------------------------------------------------
+       CREATES CLICKABLE QUICK ACTION BUTTONS IN CHATBOT
+      ----------------------------------------------------*/
     function addMetricOptions() {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', 'bot');
@@ -167,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const list = document.createElement('div');
         list.classList.add('bot-list');
-
+        // Create a button for each metric option
         metricOptions.forEach((option) => {
             const button = document.createElement('button');
             button.type = 'button';
@@ -176,17 +199,21 @@ document.addEventListener('DOMContentLoaded', function () {
             button.addEventListener('click', () => {
                 addUserMessage(option.label);
                 handleDashboardComponentSelection(option);
-
             });
             list.appendChild(button);
         });
 
+        // Append UI elements to chatbot window
         content.appendChild(list);
         messageDiv.appendChild(content);
         chatbotMessages.appendChild(messageDiv);
+
+        // Scroll to latest message
         scrollToBottom();
     }
-
+    /* ---------------------------------------------
+       RENDERS A USER MESSAGE IN CHAT WINDOW
+    ----------------------------------------------*/
     function addUserMessage(text) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', 'user');
@@ -195,6 +222,9 @@ document.addEventListener('DOMContentLoaded', function () {
         scrollToBottom();
     }
 
+    /* ---------------------------------------------
+       RENDERS A PLAIN ASSISTANT MESSAGE IN CHAT WINDOW
+    ----------------------------------------------*/
     function addBotMessage(text) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', 'bot');
@@ -204,6 +234,9 @@ document.addEventListener('DOMContentLoaded', function () {
         return messageDiv;
     }
 
+    /* ---------------------------------------------
+       RENDERS BOT MESSAGE WITH CUSTOM HTML CONTENT
+    ----------------------------------------------*/
     function addBotRichMessage(html) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', 'bot');
@@ -213,11 +246,12 @@ document.addEventListener('DOMContentLoaded', function () {
         return messageDiv;
     }
 
+    // Creates a detail card explaining a selected metric definition and current value.
     function addMetricDefinitionMessage(option) {
         const safeLabel = escapeHtml(option.label);
         const safeDefinition = escapeHtml(option.definition || option.description);
         const safeValue = escapeHtml(option.value);
-
+        // Render structured metric card
         addBotRichMessage(
             `<div class="metric-detail-card">` +
             `<div class="metric-detail-header">${safeLabel}</div>` +
@@ -233,6 +267,7 @@ document.addEventListener('DOMContentLoaded', function () {
         );
     }
 
+    // Handles the selected option action: explain, navigate, or start calculator prompts.
     function handleDashboardComponentSelection(option) {
         if (option.label === 'Capacity Factor') {
             addMetricDefinitionMessage(option);
@@ -247,6 +282,7 @@ document.addEventListener('DOMContentLoaded', function () {
         addMetricDefinitionMessage(option);
     }
 
+    // Matches user input against navigation keywords.
     function findNavigationOption(message) {
         const normalizedMessage = message.trim().toLowerCase();
         const matchedAlias = Object.keys(navigationAliases).find((alias) => normalizedMessage.includes(alias));
@@ -258,14 +294,15 @@ document.addEventListener('DOMContentLoaded', function () {
         return metricOptions.find((option) => option.label === navigationAliases[matchedAlias]) ?? null;
     }
 
+    // Scrolls to a target section and applies a temporary visual highlight.
     function navigateToDashboardSection(sectionName) {
         const target = document.querySelector(`[data-chatbot-section="${sectionName}"]`);
         if (!target) {
             return;
         }
-
+        // Smooth scroll to section
         target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
+        //Reset previous highlight.
         if (highlightedSectionTimer) {
             clearTimeout(highlightedSectionTimer);
             highlightedSectionTimer = null;
@@ -280,6 +317,7 @@ document.addEventListener('DOMContentLoaded', function () {
         target.classList.add('chatbot-section-active');
 
         highlightedSection = target;
+        // Remove highlight after short duration
         highlightedSectionTimer = window.setTimeout(() => {
             target.classList.remove('chatbot-section-active');
             if (highlightedSection === target) {
@@ -289,6 +327,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 1800);
     }
 
+    /* ---------------------------------------------
+    START: CAPACITY FACTOR HELP FLOW PROMPT
+     ----------------------------------------------*/
     function addCapacityFactorPrompt() {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', 'bot');
@@ -299,17 +340,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const list = document.createElement('div');
         list.classList.add('bot-list');
-
+        //Yes button: show explanation.
         const yesButton = document.createElement('button');
         yesButton.type = 'button';
         yesButton.classList.add('bot-list-btn');
         yesButton.textContent = 'Yes';
         yesButton.addEventListener('click', () => {
             addUserMessage('Yes');
+            // Explain capacity factor with formula and example
             addBotRichMessage('Capacity Factor = (Actual Energy Output ÷ Maximum Possible Energy Output) × 100<br><br><strong>A Simple Example</strong><br>A power plant with a capacity of 1 Megawatt (MW) runs for 1 hour.<br><br>It could have produced a maximum of: 1 MW × 1 hour = 1 MWh.<br><br>It actually produced 0.5 MWh.<br><br>Its capacity factor is: (0.5 MWh ÷ 1 MWh) × 100 = 50%.');
             addCapacityFactorCalculationChoice();
         });
-
+        //No button: return to metric options.
         const noButton = document.createElement('button');
         noButton.type = 'button';
         noButton.classList.add('bot-list-btn');
@@ -318,7 +360,7 @@ document.addEventListener('DOMContentLoaded', function () {
             addUserMessage('No');
             addMetricOptions();
         });
-
+        // Append buttons to UI
         list.appendChild(yesButton);
         list.appendChild(noButton);
         content.appendChild(list);
@@ -327,6 +369,7 @@ document.addEventListener('DOMContentLoaded', function () {
         scrollToBottom();
     }
 
+    // Offers follow-up actions after explanation or calculation completes.
     function addCapacityFactorCalculationChoice() {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', 'bot');
@@ -337,7 +380,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const list = document.createElement('div');
         list.classList.add('bot-list');
-
+        //Option 1:Start calculation flow.
         const performCalculationButton = document.createElement('button');
         performCalculationButton.type = 'button';
         performCalculationButton.classList.add('bot-list-btn');
@@ -346,7 +389,7 @@ document.addEventListener('DOMContentLoaded', function () {
             addUserMessage('Perform calculation');
             startCapacityFactorFlow();
         });
-
+        //Option 2: Return to dashboard components.
         const returnDashboardButton = document.createElement('button');
         returnDashboardButton.type = 'button';
         returnDashboardButton.classList.add('bot-list-btn');
@@ -355,7 +398,9 @@ document.addEventListener('DOMContentLoaded', function () {
             addUserMessage('Return to Dashboard components');
             addMetricOptions();
         });
-
+        /* ---------------------------------------------
+           INITIALIZES CAPACITY FACTOR CALCULATION FLOW
+        ----------------------------------------------*/
         list.appendChild(performCalculationButton);
         list.appendChild(returnDashboardButton);
         content.appendChild(list);
@@ -364,6 +409,7 @@ document.addEventListener('DOMContentLoaded', function () {
         scrollToBottom();
     }
 
+    // Initializes step state for capacity factor numeric input flow.
     function startCapacityFactorFlow() {
         capacityFactorFlow = {
             active: true,
@@ -376,6 +422,7 @@ document.addEventListener('DOMContentLoaded', function () {
         addBotMessage('I can calculate it for you. Enter rated capacity in MW (for example: 1.5).');
     }
 
+    // Steps for collecting values and computing final capacity factor.
     function handleCapacityFactorInput(input) {
         if (!capacityFactorFlow || !capacityFactorFlow.active) {
             return;
@@ -406,7 +453,7 @@ document.addEventListener('DOMContentLoaded', function () {
             addBotMessage('Perfect. Now enter actual energy produced in MWh (zero or more, for example: 12).');
             return;
         }
-
+        //Step to compute capacity factor and display results.
         if (capacityFactorFlow.step === 'actualEnergyMwh') {
             const actualEnergyMwh = parseNonNegativeNumber(input);
             if (actualEnergyMwh === null) {
@@ -415,14 +462,14 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             capacityFactorFlow.actualEnergyMwh = actualEnergyMwh;
-
+            // Maximum possible energy output formula
             const maximumPossibleEnergy = capacityFactorFlow.ratedCapacityMw * capacityFactorFlow.durationHours;
             if (maximumPossibleEnergy <= 0) {
                 addBotMessage('Unable to calculate because maximum possible energy is zero. Please restart with positive inputs.');
                 capacityFactorFlow = null;
                 return;
             }
-
+            // Capacity factor formula
             const capacityFactorPercent = (capacityFactorFlow.actualEnergyMwh / maximumPossibleEnergy) * 100;
             addBotRichMessage(
                 `<strong>Your Capacity Factor Result</strong><br>` +
@@ -431,13 +478,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 `Actual energy output = ${formatNumber(capacityFactorFlow.actualEnergyMwh)} MWh<br><br>` +
                 `Capacity factor = (${formatNumber(capacityFactorFlow.actualEnergyMwh)} ÷ ${formatNumber(maximumPossibleEnergy)}) × 100 = <strong>${formatNumber(capacityFactorPercent)}%</strong>`
             );
-
+            //Ofers follow-up actions after calculation.
             addCapacityFactorCalculationChoice();
 
             capacityFactorFlow = null;
         }
     }
 
+    // validation of strict positive / non-negative user inputs.
     function parsePositiveNumber(input) {
         const parsed = Number(input.replace(',', '.'));
         if (!Number.isFinite(parsed) || parsed <= 0) {
@@ -453,19 +501,21 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return parsed;
     }
-
+    // Formats numbers to two decimal places and adds thousands separators.
     function formatNumber(value) {
         const rounded = Math.round(value * 100) / 100;
         return rounded.toLocaleString(undefined, { maximumFractionDigits: 2 });
     }
 
+    // Enables/disables input controls while the bot is "thinking".
     function setInputState(disabled) {
         isSending = disabled;
         messageInput.disabled = disabled;
         sendBtn.disabled = disabled;
-        messageInput.placeholder = disabled ? 'Waiting for assistant...' : 'Type your message...';
+        messageInput.placeholder = 'Type your message...';
     }
 
+    // Clears current chat content and resets all transient flow state.
     function resetChatSession() {
         chatbotMessages.innerHTML = '';
         messageInput.value = '';
@@ -474,10 +524,12 @@ document.addEventListener('DOMContentLoaded', function () {
         capacityFactorFlow = null;
     }
 
+    // Keeps latest message visible in the scrolling chat body.
     function scrollToBottom() {
         chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
     }
 
+    // Escapes user text before HTML insertion to prevent XSS injection.
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;

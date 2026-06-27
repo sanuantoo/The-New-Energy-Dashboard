@@ -1,0 +1,12 @@
+/* Global body reset and viewport guardrails for the React app host page. */
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #ffffff;
+}
+
+/* Root container must stretch to full viewport height for dashboard layout. */
+#root {
+  min-height: 100vh;
+}
