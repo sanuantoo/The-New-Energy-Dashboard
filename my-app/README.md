@@ -1,4 +1,4 @@
-# Energy System Monitor Dashboard
+# The new EnerplaneET UI
 
 A React + Vite dashboard for monitoring an energy system, visualizing generation and demand, and using an in-browser chatbot.
 
