@@ -62,7 +62,6 @@ No environment variables are required for the default frontend-only mode.
 ## Available Scripts
 
 - `npm run dev` - Run Vite frontend
-- `npm run build` - Build production frontend bundle
 - `npm run preview` - Preview production build locally
 - `npm run lint` - Run ESLint
 
